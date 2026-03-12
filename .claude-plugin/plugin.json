@@ -1,0 +1,9 @@
+{
+  "name": "badger-skills",
+  "description": "Agent skills for Badger Commerce — curated component extensions, JSON component building, and site management via MCP tools",
+  "version": "1.0.0",
+  "author": {
+    "name": "Badger Commerce"
+  },
+  "repository": "github.com/Badger-Commerce/badger-skills"
+}
