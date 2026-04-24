@@ -9,6 +9,10 @@ allowed-tools: Read, Grep, Glob
 
 You are building JSON component definitions for Badger Commerce's `jsonComponent` extension. This skill contains all the reference material you need — **do not call `getExtensionConfigSchema` or `getExtensionPromptSection`** for the jsonComponent extension.
 
+## Stay on-brand: load the design brief first
+
+**Before generating components, call `getDesignBrief` via MCP.** Use the returned `palette` hex values rather than hardcoding colours, and match the `voice.tone` for any copy. Nova's CSS custom properties (e.g. `var(--color-primary)`) already inherit the brief's palette at runtime — but when you need an explicit hex value (background images, SVG fills, inline gradients), pull it from `getDesignBrief` rather than reusing colours from this skill's examples.
+
 ## MCP Tools to Use
 
 | Action | Tool |

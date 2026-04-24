@@ -9,6 +9,10 @@ allowed-tools: Read, Grep, Glob
 
 The Hero extension provides curated hero section layouts with form-based editing and full JSON customisation. It leverages the existing JSON component rendering engine for content slots.
 
+## Stay on-brand: load the design brief first
+
+**Before generating hero copy or picking colours, call `getDesignBrief` via MCP.** Use the returned `palette` hex values for button/accent colours and the `voice.tone` to shape headline and subtitle copy. Any colours you see in the examples below are illustrative — don't propagate them into output without checking the brief.
+
 ## MCP Tools to Use
 
 | Action | Tool |

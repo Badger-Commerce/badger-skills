@@ -11,6 +11,10 @@ The `animationScene` extension renders a declarative GSAP animation on the page.
 
 **This skill contains everything you need — do not call `getExtensionConfigSchema` for animationScene.**
 
+## Stay on-brand: load the design brief first
+
+**Before generating any scene, call `getDesignBrief` via MCP.** The returned object contains the tenant's palette (`palette.primary/secondary/accent`), voice, typography and shape language. Use the palette hex values in the scene instead of any colours you see in the examples below — **the example colours in this skill are illustrative only**. If the tenant has no brief yet, `getDesignBrief` returns sensible defaults and the scene still renders. Match the `voice.tone` when writing any copy inside the scene.
+
 ## When to use it
 
 - **Homepage/landing hero accents** — animated titles, orbiting shapes, looping product reveals
