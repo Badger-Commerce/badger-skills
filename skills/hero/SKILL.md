@@ -13,6 +13,8 @@ The Hero extension provides curated hero section layouts with form-based editing
 
 **Before generating hero copy or picking colours, call `getDesignBrief` via MCP.** Use the returned `palette` hex values for button/accent colours and the `voice.tone` to shape headline and subtitle copy. Any colours you see in the examples below are illustrative — don't propagate them into output without checking the brief.
 
+When the tenant has set `palette.gradient`, the compiled CSS exposes `--gradient-brand` — prefer `background: var(--gradient-brand)` on hero backgrounds over recreating your own linear-gradient from the individual palette colours. For dark-mode-leaning brands the brief may also set `palette.surface` (card backgrounds) and `palette.textStrong` (heading colour); the CSS compiler maps these to `--color-surface` and `--color-text-strong` automatically, so sticking to those Nova tokens is enough — no custom overrides needed.
+
 ## MCP Tools to Use
 
 | Action | Tool |

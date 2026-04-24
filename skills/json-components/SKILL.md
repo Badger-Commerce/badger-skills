@@ -13,6 +13,8 @@ You are building JSON component definitions for Badger Commerce's `jsonComponent
 
 **Before generating components, call `getDesignBrief` via MCP.** Use the returned `palette` hex values rather than hardcoding colours, and match the `voice.tone` for any copy. Nova's CSS custom properties (e.g. `var(--color-primary)`) already inherit the brief's palette at runtime — but when you need an explicit hex value (background images, SVG fills, inline gradients), pull it from `getDesignBrief` rather than reusing colours from this skill's examples.
 
+When the brief sets `palette.gradient`, prefer `background: var(--gradient-brand)` over reassembling a `linear-gradient(...)` from the palette. For card/surface backgrounds use `var(--color-surface)` and for heading-weight text use `var(--color-text-strong)` — both follow the tenant's brief (light-mode defaults when unset, brand-specific values when set, e.g. dark cards for dark-mode brands).
+
 ## MCP Tools to Use
 
 | Action | Tool |

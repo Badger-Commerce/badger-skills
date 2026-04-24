@@ -15,6 +15,8 @@ The `animationScene` extension renders a declarative GSAP animation on the page.
 
 **Before generating any scene, call `getDesignBrief` via MCP.** The returned object contains the tenant's palette (`palette.primary/secondary/accent`), voice, typography and shape language. Use the palette hex values in the scene instead of any colours you see in the examples below — **the example colours in this skill are illustrative only**. If the tenant has no brief yet, `getDesignBrief` returns sensible defaults and the scene still renders. Match the `voice.tone` when writing any copy inside the scene.
 
+If the brief has `palette.gradient` set, the CSS compiler exposes it as `--gradient-brand` — use `background: var(--gradient-brand)` for canvas backgrounds or hero blocks instead of crafting your own `linear-gradient(...)`. Dark-leaning brands may also provide `palette.surface` + `palette.textStrong`, compiled to `--color-surface` and `--color-text-strong`; prefer those over hardcoded greys.
+
 ## When to use it
 
 - **Homepage/landing hero accents** — animated titles, orbiting shapes, looping product reveals
