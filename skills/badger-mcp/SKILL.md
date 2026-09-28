@@ -55,3 +55,18 @@ Every read tool has a `manage*` twin for writes (`products` / `manageProducts`,
 2. `statistics` topProducts / salesSummary / revenueBreakdown to drill in.
 3. `siteTraffic` timeSeries / topPages.
 4. `orders` countNew / list (status SUBMITTED) for orders waiting to be processed.
+
+## Fulfil, cancel and take back orders
+1. `opsInbox` for what's waiting: orders to pack and dispatch, returns to receive and refund.
+2. Pack: `manageFulfilment` pack (SUBMITTED orders).
+3. Dispatch: `manageFulfilment` dispatch with `carrier`, `trackingNumber` and, if the carrier
+   has one, a `trackingUrl`. The customer's dispatch email includes them. If the customer says
+   the email never arrived, `manageOrderEmails` resendDispatch.
+4. Cancel (SUBMITTED or PACKING only): `manageCancellations` with `dryRun: true` first, and tell
+   the user what will be refunded or released and restocked. Then run it with a `reason` and a
+   new `idempotencyKey`. Orders with subscriptions, gift cards or donations can't be cancelled.
+5. Return (DISPATCHED or DELIVERED): `orders get` for the line ids, then `manageReturns` create
+   with `lines {lineId: quantity}` and a reason. When the parcel arrives: `manageReturns`
+   receive (restocks unless `restock: false`). Then `manageReturns` refund with `dryRun: true`,
+   confirm the amount with the user, and refund with an `idempotencyKey`. Or reject with a reason
+   the customer will see.
