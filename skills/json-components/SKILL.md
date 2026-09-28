@@ -7,7 +7,7 @@ allowed-tools: Read, Grep, Glob
 
 # JSON Component Builder
 
-You are building JSON component definitions for Badger Commerce's `jsonComponent` extension. This skill contains all the reference material you need — **do not call `getExtensionConfigSchema` or `getExtensionPromptSection`** for the jsonComponent extension.
+You are building JSON component definitions for Badger Commerce's `jsonComponent` extension. This skill contains all the reference material you need — **do not call `extensions` getSchema or getPromptSection** for the jsonComponent extension.
 
 ## Stay on-brand: load the design brief first
 
@@ -20,8 +20,8 @@ When the brief sets `palette.gradient`, prefer `background: var(--gradient-brand
 | Action | Tool |
 |--------|------|
 | Find existing extensions on an item | `listExtensionsOnItem` |
-| Add a new jsonComponent extension | `addExtensionToItem` (extensionName: "jsonComponent") |
-| Update the JSON definition | `updateExtensionConfig` — set the `jsonComponent` property |
+| Add a new jsonComponent extension | `manageExtensionConfig` add (extensionName: "jsonComponent") |
+| Update the JSON definition | `manageExtensionConfig` update — set the `jsonComponent` property |
 | Find images for use in components | `listMedia` |
 | List available page slots | `listAvailablePageLocations` |
 

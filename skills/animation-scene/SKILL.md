@@ -9,7 +9,7 @@ allowed-tools: Read, Grep, Glob
 
 The `animationScene` extension renders a declarative GSAP animation on the page. Authors describe a canvas, a set of elements, a timeline of tweens, and (optionally) bindings to live commerce data. The server resolves bindings, expands repeats, substitutes tokens, and emits a flat spec that a tiny runtime turns into a GSAP timeline.
 
-**This skill contains everything you need — do not call `getExtensionConfigSchema` for animationScene.**
+**This skill contains everything you need — do not call `extensions` getSchema for animationScene.**
 
 ## Stay on-brand: load the design brief first
 
@@ -29,8 +29,8 @@ If the brief has `palette.gradient` set, the CSS compiler exposes it as `--gradi
 | Action | Tool |
 |--------|------|
 | Find existing extensions on an item | `listExtensionsOnItem` |
-| Add a new animation scene | `addExtensionToItem` (extensionName: `animationScene`) |
-| Update the scene spec | `updateExtensionConfig` — set the `sceneConfig` property (JSON string) |
+| Add a new animation scene | `manageExtensionConfig` add (extensionName: `animationScene`) |
+| Update the scene spec | `manageExtensionConfig` update — set the `sceneConfig` property (JSON string) |
 | Find images for static elements | `listMedia` |
 | Find a collection for product binding | `listCollections` (or equivalent) |
 
