@@ -20,8 +20,8 @@ When the tenant has set `palette.gradient`, the compiled CSS exposes `--gradient
 | Action | Tool |
 |--------|------|
 | Find existing extensions on an item | `listExtensionsOnItem` |
-| Add a hero extension | `addExtensionToItem` (extensionName: "hero") |
-| Update hero configuration | `updateExtensionConfig` — set the `heroConfig` property |
+| Add a hero extension | `manageExtensionConfig` add (extensionName: "hero") |
+| Update hero configuration | `manageExtensionConfig` update — set the `heroConfig` property |
 | Find images for backgrounds | `listMedia` |
 
 ## 5 Preset Layouts

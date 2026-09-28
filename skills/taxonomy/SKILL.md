@@ -124,10 +124,10 @@ Items
 
 1. `taxonomies` getActive — check if a taxonomy already exists
 2. Design your hierarchy on paper/notes first — levels, attributes, and allowed values
-3. Create the taxonomy and add levels with their attributes
-4. `productTaxonomy` assign — assign products to their appropriate levels
-5. `productTaxonomy` updateAttributes — populate attribute values for each product
-6. `productTaxonomy` getAttributes — check completeness scores and find gaps
+3. Create the taxonomy and its levels and attributes in the admin UI (the MCP `taxonomies` tool is read-only)
+4. `manageProductTaxonomy` assign — assign products to their appropriate levels
+5. `manageProductTaxonomy` updateAttributes — populate attribute values for each product
+6. `productTaxonomy` (skuId) — check completeness scores and find gaps
 7. Iterate: add attributes as new product categories emerge
 
 **Tip:** Collections can have a `defaultTaxonomyLevelId` — when products are added to that collection, they're automatically assigned to the matching taxonomy level.
