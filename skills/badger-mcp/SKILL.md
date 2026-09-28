@@ -65,7 +65,10 @@ Every read tool has a `manage*` twin for writes (`products` / `manageProducts`,
 4. Cancel (SUBMITTED or PACKING only): `manageCancellations` with `dryRun: true` first, and tell
    the user what will be refunded or released and restocked. Then run it with a `reason` and a
    new `idempotencyKey`. Orders with subscriptions, gift cards or donations can't be cancelled.
-5. Return (DISPATCHED or DELIVERED): `orders get` for the line ids, then `manageReturns` create
+5. Customer return requests: `returns list state PENDING_APPROVAL`, `returns get` to read the
+   customer's reason and comments, then `manageReturns` approve (emails them the return
+   instructions) or reject with a reason they'll see.
+6. Return (DISPATCHED or DELIVERED): `orders get` for the line ids, then `manageReturns` create
    with `lines {lineId: quantity}` and a reason. When the parcel arrives: `manageReturns`
    receive (restocks unless `restock: false`). Then `manageReturns` refund with `dryRun: true`,
    confirm the amount with the user, and refund with an `idempotencyKey`. Or reject with a reason
