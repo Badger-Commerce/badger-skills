@@ -26,18 +26,47 @@ Every read tool has a `manage*` twin for writes (`products` / `manageProducts`,
 
 ## Add content to a page, product or collection
 1. `pages` get (or `products` / `collections` get) to find the item.
-2. `extensions` listPageLocations to see the slots (body, sidebar, bannerSection, ...).
+2. `extensions` listPageLocations with itemType and itemId: the slots that item really renders.
+   A block in any other slot is refused, because it would never show.
 3. `extensions` getPromptSection for guidance on the extension you're adding. Skip this for
    jsonComponent, hero and animationScene: use the `json-components`, `hero` and
    `animation-scene` skills instead.
-4. `manageExtensionConfig` add (extensionName, pageLocation).
-5. `manageExtensionConfig` update (extensionConfigId from step 4 or from `extensionConfig`).
+4. `manageExtensionConfig` add (extensionName, pageLocation, properties). Send jsonComponent,
+   heroConfig and sceneConfig as JSON; jsonComponent is validated and the error names the fault.
+5. `manageExtensionConfig` update (extensionConfigId from step 4 or from `extensionConfig`):
+   properties, pageLocation to move it, enabled false to hide it. Order within a slot is
+   `properties.displayPriority`, lowest first (default 1000).
 6. Call `getDesignBrief` first if you're producing anything visual.
+
+## Make the shop ready for visitors
+A shop isn't launched until a shopper landing on the home page can get everywhere and has a
+reason to stay. After creating the catalogue and pages:
+1. Navigation: `menus` list finds the main menu (main=true), `menus` get shows what shoppers
+   see in `rendered`. `manageMenus` setItems replaces it: link every collection and page that
+   matters (type COLLECTION or PAGE, target = seoName). Keep it to about six top-level items and
+   group the rest as children. Check `rendered` afterwards: an item with no url is dead.
+2. Home page (the `home` collection): `extensionConfig` collection home shows its blocks and the
+   ones it inherits. Replace the placeholder welcome text, then build it up in the slots it
+   renders, top to bottom:
+   - `bannerSection`: a hero (`hero` skill) with the shop's promise and a button to the main
+     collection;
+   - `topBanner`: a short intro and the brand story, as markdownFragment or a jsonComponent
+     layout (`json-components` skill), with scroll reveal;
+   - `bottomBanner`: a jsonComponent productGrid or productCarousel bound to the main
+     collection, reassurance (delivery, returns, how it's made), and an emailCaptureExtension.
+   Aim for something worth reading, not a line of filler: several hundred words across blocks.
+3. Home product grid: it shows the products in the `home` collection. Add your best sellers
+   (`manageProducts` addToCollection with collection home) and take the placeholder
+   `sample-product` out of it, or disable it.
+4. Hand over real links: every result carries `url`, the shopper-facing address. Quote those
+   (collections are /collection/..., pages /p/..., products /product/...); never guess.
 
 ## Set up a collection page
 1. `manageCollections` create: name, seoName. Nesting under a parent is admin-UI only for now.
 2. `manageProducts` addToCollection for each product.
-3. `manageExtensionConfig` add a hero in `bannerSection`, then body content.
+3. `manageExtensionConfig` add a hero in `bannerSection`, then content in `topBanner` (above
+   the product grid) or `bottomBanner` (below it).
+4. Add it to the main navigation (`manageMenus` setItems, see above).
 
 ## Structured product data
 1. `taxonomies` getActive. If there is none, design one with the `taxonomy` skill and create it
