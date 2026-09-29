@@ -59,7 +59,7 @@ reason to stay. After creating the catalogue and pages:
 1. Navigation: `menus` list finds the main menu (main=true), `menus` get shows what shoppers
    see in `rendered`. `manageMenus` setItems replaces it: link every collection and page that
    matters (type COLLECTION or PAGE, target = seoName). Keep it to about six top-level items and
-   group the rest as children. Check `rendered` afterwards: an item with no url is dead.
+   group the rest as children. Don't add a Home item: the logo already links home. Check `rendered` afterwards: an item with no url is dead.
 2. Home page (the `home` collection): `extensionConfig` collection home shows its blocks and the
    ones it inherits. Replace the placeholder welcome text, then build it up in the slots it
    renders, top to bottom:
@@ -73,7 +73,11 @@ reason to stay. After creating the catalogue and pages:
 3. Home product grid: it shows the products in the `home` collection. Add your best sellers
    (`manageProducts` addToCollection with collection home) and take the placeholder
    `sample-product` out of it, or disable it.
-4. Hand over real links: every result carries `url`, the shopper-facing address. Quote those
+4. Images: use only the shop's own photos. `media list` shows the library; put them on products
+   with `manageProducts` setImages (first is the main image) and use their `url` in hero and
+   jsonComponent blocks. Never use stock, placeholder or made-up image URLs. If the library is
+   empty or has nothing suitable, leave images out and tell the merchant which photos are needed.
+5. Hand over real links: every result carries `url`, the shopper-facing address. Quote those
    (collections are /collection/..., pages /p/..., products /product/...); never guess.
 
 ## Set up a collection page
