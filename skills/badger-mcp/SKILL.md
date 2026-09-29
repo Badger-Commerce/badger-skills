@@ -38,6 +38,21 @@ Every read tool has a `manage*` twin for writes (`products` / `manageProducts`,
    `properties.displayPriority`, lowest first (default 1000).
 6. Call `getDesignBrief` first if you're producing anything visual.
 
+## Make the shop ready to trade
+A new shop starts with the platform's name, colours and a £1.00 placeholder delivery option.
+1. Identity: `manageBranding` setIdentity with the shop's real name (it shows in the header and
+   page titles). The domain and going live stay with the merchant in the admin UI.
+2. Brand: if `getDesignBrief` is still the defaults (indigo #4F46E5, empty voice), propose a
+   palette and voice that fit the shop and save them with `manageBranding` setDesignBrief
+   (only the sections you pass change; colours as hex). The storefront restyles to match, so do
+   this before building content.
+3. Delivery: `deliveryOptions` list, then `manageDeliveryOptions` update the placeholder and
+   create the rest, with real names, prices (minor units) and descriptions.
+4. Policies: a delivery and returns page (`managePages` create) stating the terms the merchant
+   gave you, linked from the navigation.
+5. Say what you invented. If the merchant didn't give you a founder's name, a start date or a
+   returns window, don't present a guess as fact: flag it in your summary.
+
 ## Make the shop ready for visitors
 A shop isn't launched until a shopper landing on the home page can get everywhere and has a
 reason to stay. After creating the catalogue and pages:
