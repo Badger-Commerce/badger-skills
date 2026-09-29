@@ -59,20 +59,23 @@ reason to stay. After creating the catalogue and pages:
 1. Navigation: `menus` list finds the main menu (main=true), `menus` get shows what shoppers
    see in `rendered`. `manageMenus` setItems replaces it: link every collection and page that
    matters (type COLLECTION or PAGE, target = seoName). Keep it to about six top-level items and
-   group the rest as children. Don't add a Home item: the logo already links home. Check `rendered` afterwards: an item with no url is dead.
-2. Home page (the `home` collection): `extensionConfig` collection home shows its blocks and the
-   ones it inherits. Replace the placeholder welcome text, then build it up in the slots it
-   renders, top to bottom:
+   group the rest as children. Don't add a Home item: the logo already links home. Check
+   `rendered` afterwards: an item with no url is dead.
+2. Home page: what `/` shows. On new shops it's the page `home` (`pages get home` finds it);
+   older shops use the collection `home`.
+   `extensionConfig` on it shows its blocks and the ones it inherits. Replace the placeholder
+   welcome text, then build it top to bottom in the slots it renders:
    - `bannerSection`: a hero (`hero` skill) with the shop's promise and a button to the main
      collection;
-   - `topBanner`: a short intro and the brand story, as markdownFragment or a jsonComponent
-     layout (`json-components` skill), with scroll reveal;
-   - `bottomBanner`: a jsonComponent productGrid or productCarousel bound to the main
-     collection, reassurance (delivery, returns, how it's made), and an emailCaptureExtension.
+   - `topBanner` / `mainSection`: a short intro and the brand story, as markdownFragment or a
+     jsonComponent layout (`json-components` skill), with scroll reveal;
+   - `bottomBanner`: reassurance (delivery, returns, how it's made) and an emailCaptureExtension.
    Aim for something worth reading, not a line of filler: several hundred words across blocks.
-3. Home product grid: it shows the products in the `home` collection. Add your best sellers
-   (`manageProducts` addToCollection with collection home) and take the placeholder
-   `sample-product` out of it, or disable it.
+3. Featured products: on a home page, a jsonComponent productGrid or productCarousel bound to a
+   collection (`collection-products` data source) shows them; the new-shop home page already has
+   one bound to `featured`. Add your best sellers to that collection (`manageProducts`
+   addToCollection) and take the placeholder `sample-product` out of it, or disable it. On an
+   older shop's home collection, the built-in grid shows the collection's own products.
 4. Images: use only the shop's own photos. `media list` shows the library; put them on products
    with `manageProducts` setImages (first is the main image) and use their `url` in hero and
    jsonComponent blocks. Never use stock, placeholder or made-up image URLs. If the library is
