@@ -96,6 +96,11 @@ reason to stay. After creating the catalogue and pages:
 2. `manageProductTaxonomy` assign each product to a level, then updateAttributes.
 3. `productTaxonomy` (skuId) to find missing mandatory attributes.
 
+## Search
+
+Searches that find nothing, or "why doesn't X show when I search for Y": use the `search-tuning`
+skill (`synonyms` explain and gaps, `manageSynonyms`).
+
 ## Variants
 1. `variantGroups` list to see existing groups (e.g. colour, size).
 2. `manageVariants` create: parentSkuId, name,
