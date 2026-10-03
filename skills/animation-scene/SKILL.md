@@ -28,11 +28,11 @@ If the brief has `palette.gradient` set, the CSS compiler exposes it as `--gradi
 
 | Action | Tool |
 |--------|------|
-| Find existing extensions on an item | `listExtensionsOnItem` |
+| Find existing extensions on an item | `extensionConfig` (itemType, itemId) |
 | Add a new animation scene | `manageExtensionConfig` add (extensionName: `animationScene`) |
 | Update the scene spec | `manageExtensionConfig` update — set the `sceneConfig` property (JSON string) |
-| Find images for static elements | `listMedia` |
-| Find a collection for product binding | `listCollections` (or equivalent) |
+| Find images for static elements | `media` list |
+| Find a collection for product binding | `collections` list |
 
 The `sceneConfig` property stores a JSON **string**. When updating, pass the JSON stringified — Badger will compact it on save.
 

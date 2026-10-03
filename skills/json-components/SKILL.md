@@ -19,11 +19,11 @@ When the brief sets `palette.gradient`, prefer `background: var(--gradient-brand
 
 | Action | Tool |
 |--------|------|
-| Find existing extensions on an item | `listExtensionsOnItem` |
+| Find existing extensions on an item | `extensionConfig` (itemType, itemId) |
 | Add a new jsonComponent extension | `manageExtensionConfig` add (extensionName: "jsonComponent") |
 | Update the JSON definition | `manageExtensionConfig` update — set the `jsonComponent` property |
-| Find images for use in components | `listMedia` |
-| List available page slots | `listAvailablePageLocations` |
+| Find images for use in components | `media` list |
+| List available page slots | `extensions` listPageLocations (itemType, itemId) |
 
 The `jsonComponent` config property must contain a JSON document with `"version": "1.0"` and a `component` field defining the component tree.
 
