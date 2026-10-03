@@ -19,10 +19,10 @@ When the tenant has set `palette.gradient`, the compiled CSS exposes `--gradient
 
 | Action | Tool |
 |--------|------|
-| Find existing extensions on an item | `listExtensionsOnItem` |
+| Find existing extensions on an item | `extensionConfig` (itemType, itemId) |
 | Add a hero extension | `manageExtensionConfig` add (extensionName: "hero") |
 | Update hero configuration | `manageExtensionConfig` update — set the `heroConfig` property |
-| Find images for backgrounds | `listMedia` |
+| Find images for backgrounds | `media` list |
 
 ## 5 Preset Layouts
 
@@ -59,7 +59,25 @@ The `heroConfig` property stores a JSON string:
 | `backgroundImage` | string | centered, gradient | URL to background image |
 | `backgroundOverlay` | string | centered, video-bg | `"dark"` (60%), `"medium"` (40%), `"light"` (20%) |
 | `videoUrl` | string | video-bg | URL to MP4 video file |
+| `backgroundEffect` | string | gradient, minimal, split-image | Animated canvas behind the copy: `"none"` (default), `"constellation"`, `"flowField"`, `"gridGlow"`. Ignored on other presets |
+| `backgroundEffectIntensity` | string | as above | `"subtle"` (default) or `"normal"` |
 | `slots` | object | All | Map of slot name → JSON component definition |
+
+## Animated Background Effects
+
+`backgroundEffect` adds a Stripe/Accenture-style ambient canvas behind the hero copy. It takes its colours from the Design Brief tokens (`--color-primary`, `--color-secondary`, `--color-accent`, `--color-on-dark-accent`), so don't pass colours. It draws a still frame for reduced-motion visitors, pauses offscreen, and fades out behind the text.
+
+| Effect | Look | Good for |
+|--------|------|----------|
+| `constellation` | Drifting points joined by faint lines, nudged by the pointer | Consultancy, tech, "network" brands |
+| `flowField` | Soft particle trails following a noise field | Creative, organic, calm brands |
+| `gridGlow` | Perspective dot grid with a slow travelling glow | Product, data, infrastructure brands |
+
+Use it on at most one hero per page, usually the home page's, and pair it with `gradient` for a dark, premium look. Leave `backgroundEffectIntensity` at `subtle` unless the brief asks for bold visual flair.
+
+```json
+{"preset": "gradient", "backgroundEffect": "constellation", "slots": {...}}
+```
 
 ## Slot Component Types
 
