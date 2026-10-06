@@ -106,7 +106,7 @@ Any element becomes clickable by adding `href`. The runtime wraps the element in
 
 | Field | Purpose |
 |---|---|
-| `href` | URL to navigate to. Tokens substituted — use `{{item.url}}` which resolves to `/product/{seoName}` for products and `/collection/{seoName}` for collections |
+| `href` | URL to navigate to. Tokens substituted — use `{{item.url}}` which resolves to `/product/{seoName}` for products and `/collection/{seoName}` for collections (on a category-tree site, the `/c/` category that replaced the collection) |
 | `target` | `_blank` opens in a new tab. Runtime auto-adds `rel="noopener noreferrer"` |
 | `rel` | Explicit rel value; overrides the `_blank` default |
 | `ariaLabel` | Accessible label for links without descriptive inner text (e.g. shape- or image-only links) |

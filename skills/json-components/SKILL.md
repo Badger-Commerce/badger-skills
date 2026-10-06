@@ -190,6 +190,8 @@ Declare at root level alongside `"component"`:
 | collection-products | collection (seoName, required), limit (int, default 12), offset (int, default 0), inStockOnly (bool, default false) | Products from a collection |
 | recently-viewed | limit (int, default 10) | User's recently viewed products (requires login) |
 
+`collection-products` reads the collection as a product set, so it works on a category-tree site too, even when the collection's own page is replaced or hidden.
+
 Reference in components via `"dataSource": "mySource"` prop. Also accessible via `$ref`: `/data/{sourceName}/0/productName`.
 
 ---
@@ -215,7 +217,7 @@ For full-width background with constrained content: use `"layout": "fluid"` with
 1. Wrap in `{"version": "1.0", "component": {...}}`
 2. Every component needs `"type"` and optionally `"key"`, `"props"`, `"children"`
 3. Use ONLY semantic tokens — never raw CSS values
-4. For navigation: `"action": {"type": "navigate", "href": "/path"}`
+4. For navigation: `"action": {"type": "navigate", "href": "/path"}`. Take the path from the target's `url` in the MCP tools; hrefs aren't rewritten, so on a category-tree site (`category-navigation-source` MERCH_TREE) link categories as `/c/...`, not `/collection/...`
 5. Output valid JSON only — no markdown, no explanations
 6. Prices are in cents
 7. Use meaningful fallback values for data bindings

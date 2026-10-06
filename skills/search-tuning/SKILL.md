@@ -42,7 +42,7 @@ that two different words mean the same thing: "shoes" finds nothing in a shop wh
    - **Customers and the catalogue use different words for the same thing**: "shoes" vs
      "footwear", "hi vis" vs "high visibility". Add a synonym. This helps every product.
    - **The product is in the wrong place**: a taxonomy or category problem, not a search one (see
-     the `taxonomy` skill).
+     the `taxonomy` and `category-trees` skills).
 3. Run `explain` again to confirm the query now finds it.
 
 ## Workflow: close the gaps

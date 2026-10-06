@@ -98,6 +98,10 @@ Each slot value is a standard JSON component definition — the same types and s
 
 **Button variants:** `button-primary`, `button-secondary`
 
+### Button Links
+
+Use the `url` the MCP tools return for the target (`collections`, `pages`, `products` or `merchandisingTrees` node), as a site-relative path. Links in a hero aren't rewritten for you: on a category-tree site (`category-navigation-source` MERCH_TREE), link a category as `/c/...`, not `/collection/...`. A replaced collection's old URL only redirects, and a hidden one is a 404.
+
 ## Default Page Location
 
 `bannerSection` — heroes render above the main content area by default.
@@ -113,7 +117,7 @@ Each slot value is a standard JSON component definition — the same types and s
   "slots": {
     "title": {"type": "heading", "props": {"text": "Summer Sale", "level": 1, "style": {"variant": "heading-xl", "color": "white"}}},
     "subtitle": {"type": "text", "props": {"text": "Up to 50% off selected items", "style": {"variant": "body-lg", "color": "white"}}},
-    "cta": {"type": "button", "props": {"text": "Shop Sale", "action": {"type": "navigate", "href": "/collections/sale"}, "style": {"variant": "button-primary"}}}
+    "cta": {"type": "button", "props": {"text": "Shop Sale", "action": {"type": "navigate", "href": "/collection/sale"}, "style": {"variant": "button-primary"}}}
   }
 }
 ```
@@ -125,7 +129,7 @@ Each slot value is a standard JSON component definition — the same types and s
   "slots": {
     "title": {"type": "heading", "props": {"text": "New Arrivals", "level": 1, "style": {"variant": "heading-xl"}}},
     "subtitle": {"type": "text", "props": {"text": "Handpicked for quality and style", "style": {"variant": "body-lg", "color": "muted"}}},
-    "cta": {"type": "button", "props": {"text": "Browse", "action": {"type": "navigate", "href": "/collections/new"}, "style": {"variant": "button-primary"}}},
+    "cta": {"type": "button", "props": {"text": "Browse", "action": {"type": "navigate", "href": "/collection/new"}, "style": {"variant": "button-primary"}}},
     "heroImage": {"type": "image", "props": {"src": "media/new-arrivals.jpg", "alt": "New arrivals collection"}}
   }
 }

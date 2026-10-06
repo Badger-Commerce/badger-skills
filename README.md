@@ -17,6 +17,7 @@ claude plugin install badger-skills
 | `hero` | Add and configure Hero section extensions with 5 preset layouts | auto |
 | `json-components` | Build and edit freeform JSON components — full component catalog, semantic style tokens, data binding | auto |
 | `taxonomy` | Design and construct product taxonomies — common patterns for apparel, food, retail, and charity shops | auto |
+| `category-trees` | Build and run category trees (`/c/` pages) — backings, cross-cutting pages, product breadcrumbs, replaced collections, and moving a collection-based shop onto a tree | auto |
 | `search-tuning` | Diagnose search ("why doesn't X show for Y"), close zero-result gaps, manage synonyms and review AI suggestions | auto |
 
 Start with `/badger-mcp` for an overview of the platform and how the tools fit together. The other skills are triggered automatically when you're working in their domain.

@@ -1,6 +1,6 @@
 ---
 name: badger-mcp
-description: Workflows for running a Badger Commerce shop through its MCP tools — setting up products, collections, pages and extensions, variants, taxonomy, and reviewing performance
+description: Workflows for running a Badger Commerce shop through its MCP tools — setting up products, collections, category trees, pages and extensions, variants, taxonomy, and reviewing performance
 user-invocable: true
 allowed-tools: Read, Grep, Glob
 ---
@@ -21,6 +21,8 @@ Every read tool has a `manage*` twin for writes (`products` / `manageProducts`,
 3. `manageProducts` addToCollection: skuId plus the collection's seoName or ID.
 4. If the site has a taxonomy (`taxonomies` getActive): `manageProductTaxonomy` assign, then
    `manageProductTaxonomy` updateAttributes, then check the result with `productTaxonomy`.
+   On a category-tree site this is usually what puts the product in its categories (see
+   Category trees below); `products` get shows its `homeCategory`.
 5. `inventory` get / `manageInventory` set: stock is held per SKU, not on the product.
 6. Content: `manageExtensionConfig` add, then update (see below).
 
@@ -58,7 +60,8 @@ A shop isn't launched until a shopper landing on the home page can get everywher
 reason to stay. After creating the catalogue and pages:
 1. Navigation: `menus` list finds the main menu (main=true), `menus` get shows what shoppers
    see in `rendered`. `manageMenus` setItems replaces it: link every collection and page that
-   matters (type COLLECTION or PAGE, target = seoName). Keep it to about six top-level items and
+   matters (type COLLECTION or PAGE, target = seoName; on a category-tree site, categories are
+   type MERCHANDISING_NODE with the /c/ path as target). Keep it to about six top-level items and
    group the rest as children. Don't add a Home item: the logo already links home. Check
    `rendered` afterwards: an item with no url is dead.
 2. Home page: what `/` shows. On new shops it's the page `home` (`pages get home` finds it);
@@ -81,7 +84,9 @@ reason to stay. After creating the catalogue and pages:
    jsonComponent blocks. Never use stock, placeholder or made-up image URLs. If the library is
    empty or has nothing suitable, leave images out and tell the merchant which photos are needed.
 5. Hand over real links: every result carries `url`, the shopper-facing address. Quote those
-   (collections are /collection/..., pages /p/..., products /product/...); never guess.
+   (collections are /collection/..., tree categories /c/..., pages /p/..., products
+   /product/...); never guess. On a tree site a collection's `url` may be its category, or null
+   when it has no page.
 
 ## Set up a collection page
 1. `manageCollections` create: name, seoName. Nesting under a parent is admin-UI only for now.
@@ -89,6 +94,23 @@ reason to stay. After creating the catalogue and pages:
 3. `manageExtensionConfig` add a hero in `bannerSection`, then content in `topBanner` (above
    the product grid) or `bottomBanner` (below it).
 4. Add it to the main navigation (`manageMenus` setItems, see above).
+
+On a category-tree site, a collection is a product set or a landing page, not a category: add a
+category to the tree instead (below), or the new collection's page may be hidden.
+
+## Category trees (/c/ pages)
+A site's categories come from one of two places, set by `category-navigation-source`
+(`siteConfig` get): COLLECTIONS (the default; categories are collections and their parents,
+at /collection/...) or MERCH_TREE (the primary merchandising tree, at /c/...). On a tree site,
+collections still feed product grids, featured blocks and the home page, but the tree owns the
+category links, the menus' category items and the product breadcrumb.
+1. `merchandisingTrees` outline: every category of the primary tree, with its path and backing.
+2. `products` get: `homeCategory` is where the product's breadcrumb leads. `manageProducts`
+   update with mainCategory (a category's id, path or name; `none` clears) overrides it.
+
+Adding and arranging categories, cross-cutting pages, replacing collections, and moving a
+collection-based shop onto a tree: use the `category-trees` skill (`merchandisingTrees`,
+`manageMerchandisingTrees`).
 
 ## Structured product data
 1. `taxonomies` getActive. If there is none, design one with the `taxonomy` skill and create it

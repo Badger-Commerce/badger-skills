@@ -1,6 +1,6 @@
 ---
 name: taxonomy
-description: Design and construct product taxonomies for Badger Commerce — common patterns for apparel, food, retail, and charity shops with attribute best practices
+description: Design and construct product taxonomies for Badger Commerce — common patterns for apparel, food, retail, and charity shops with attribute best practices, and building category trees from them
 user-invocable: false
 allowed-tools: Read, Grep, Glob
 ---
@@ -131,3 +131,27 @@ Items
 7. Iterate: add attributes as new product categories emerge
 
 **Tip:** Collections can have a `defaultTaxonomyLevelId` — when products are added to that collection, they're automatically assigned to the matching taxonomy level.
+
+## Building a Category Tree From the Taxonomy
+
+On a site with a merchandising tree (the `/c/` category pages; see the `category-trees` skill), the taxonomy is what most categories are built from. A product assigned to a level shows up in every category projected from that level or one above it, with no collection to add it to. That changes a few design choices.
+
+### Levels become categories
+- Back each browsable category with a `taxonomyProjection`: `{"type": "taxonomyProjection", "taxonomyLevelId": "<levelId>"}`. It lists products assigned to that level **or any level beneath it**, so a parent category fills itself from its children.
+- `taxonomies` getActive gives the `levelId`s, and each attribute's `attributeId` and `allowedValues`.
+- The tree doesn't have to mirror the taxonomy one to one. A heading with no products of its own is a `group` category, and a level too broad for shoppers can be split with attribute filters (below).
+
+### Attribute filters: subcategories and cross-cutting pages
+`attributeFilters` narrow a projection to attribute values: `[{"attributeId": "application", "values": ["Drywall"]}]`. Several filters must all match; within one filter, any listed value does. Values match the stored value exactly, so filter on SINGLE_SELECT or MULTI_SELECT attributes rather than free-text STRING ones.
+
+Two uses:
+- **Subcategories that split a level.** "Wood Screws" and "Drywall Screws" are both the Screws level, filtered by `application`. Make the attribute mandatory, so that every product lands in one of them.
+- **Cross-cutting pages.** "Stainless Steel Fixings" (Fixings + `finish`), "Waterproof Safety Boots" (Footwear + `features`), "18V Cordless Range" (Power Tools + `voltage` and `power-source`). They cut across the real categories rather than splitting them.
+
+### `excludeAsProductHome`
+A product's breadcrumb leads to its **home category**: the deepest visible category that matches it. A cross-cutting page can be as deep as the real category (a stainless wood screw matches both `/c/fixings/screws/wood-screws` and `/c/fixings/stainless-steel`), so it would take the breadcrumb. Mark every cross-cutting page `excludeAsProductHome` (`manageMerchandisingTrees` setExcludeAsProductHome, or `excluded: true` when you create it). Splitting subcategories stay as homes. A product that still lands in the wrong place gets a main category (`manageProducts` update, mainCategory).
+
+### Design tips
+- **Decide the cross-cutting pages while designing attributes.** Each one needs a SELECT attribute with controlled values, filled on every product it should list.
+- **Facets come from the same attributes.** A category's filters are taxonomy attribute ids (plus `price`, `inStock` and the like). An attribute worth a category page is usually worth a facet too.
+- **Missing values hide products.** A product without the filtered attribute isn't on the page. Check completeness with `productTaxonomy` before relying on a filtered category.
