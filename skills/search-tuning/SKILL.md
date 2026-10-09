@@ -1,6 +1,6 @@
 ---
 name: search-tuning
-description: Diagnose and fix Badger Commerce site search through its MCP tools — "why doesn't X show when I search for Y", searches that find nothing, adding synonyms, and reviewing AI-suggested synonyms
+description: Diagnose and fix Badger Commerce site search through its MCP tools — "why doesn't X show when I search for Y", searches that find nothing, adding synonyms, reviewing AI-suggested synonyms, and pinning, boosting or redirecting search results
 user-invocable: false
 allowed-tools: Read, Grep, Glob
 ---
@@ -24,7 +24,11 @@ that two different words mean the same thing: "shoes" finds nothing in a shop wh
 | ---- | ------- |
 | `synonyms` | `list` (optional `status` LIVE, SUGGESTED or REJECTED), `explain` (`query`, optional `product` SKU or seoName), `gaps` (zero-result searches in the last 30 days, with any synonym already covering each) |
 | `manageSynonyms` | `create`, `update`, `delete`, `accept`, `reject`, `suggest`, `resync` |
-| `siteTraffic` | `topSearches`, `zeroResultSearches` for wider context |
+| `siteTraffic` | `topSearches`, `zeroResultSearches`, `searchPerformance` (per term: searches, clicks, adds, orders, `rarelyClicked`) for wider context; `from`/`to` (yyyy-MM-dd, default the last 30 days, 90 kept) |
+| `productRanking` | `rules` (search-term rules), `preview` (`query`: the first results as shoppers see them, each marked pinned, boosted, buried or normal), `boosts` (learned boosts) |
+| `manageProductRanking` | `pin`, `boost`, `bury`, `unrank` (one product for a `query`), `setRule`, `deleteRule`, `acceptBoost`, `rejectBoost` |
+
+Search terms are recorded only while `search-term-tracking-enabled` is on (the default); without them gaps, topSearches and suggest have nothing to work with.
 
 ## Workflow: "why doesn't X show when I search for Y?"
 
@@ -35,10 +39,13 @@ that two different words mean the same thing: "shoes" finds nothing in a shop wh
      don't contain them. Pick one fix below.
    - **A synonym already applies but the product still doesn't match**: check the synonym's terms
      against the words in the product's name.
+   - **It matches, but not on the first page** (`position` null): a ranking problem, not a
+     matching one (see Order the results).
 2. Choose the fix.
    - **The word is wrong or missing on the product**: the product is called "Rigger boot" and
-     nothing says it is a boot for groundwork. Improve the name or description with
-     `manageProducts`. This helps that one product.
+     nothing says it is a boot for groundwork. Add the word to its search terms (`manageProducts`
+     update `addSearchTerms`), or improve the name or description. Saving reindexes it. This
+     helps that one product.
    - **Customers and the catalogue use different words for the same thing**: "shoes" vs
      "footwear", "hi vis" vs "high visibility". Add a synonym. This helps every product.
    - **The product is in the wrong place**: a taxonomy or category problem, not a search one (see
@@ -56,6 +63,22 @@ that two different words mean the same thing: "shoes" finds nothing in a shop wh
    They arrive as SUGGESTED and are **not live**.
 4. Review each suggestion: `synonyms` list with `status` SUGGESTED, `explain` the motivating query
    if unsure, then `accept` or `reject`. Rejected ones are remembered and not proposed again.
+
+## Order the results
+Synonyms decide what matches; rankings decide the order. A rule applies when a search matches its
+term exactly (ignoring case and spacing), and only under the default "Featured" sort.
+1. `productRanking` preview with the `query` to see the order shoppers get.
+2. One product at a time: `manageProductRanking` pin (`products`, `query`, `position` 1-based),
+   boost, bury or unrank. Products by SKU, variant SKU, URL name or exact name.
+3. A whole rule: setRule (`query` or `id`; `pinned`, `boosted`, `buried`, at most 100 each)
+   replaces what's there, including the redirect and banner; deleteRule (`id` or `query`).
+4. Searches for something that isn't a product ("returns", "delivery"): setRule with a
+   `redirect` (a site path such as `/p/returns`, never `/search`) or a banner (`bannerText`, up to
+   300 characters, with `bannerLinkUrl` and `bannerLinkText`). A redirected search no longer
+   counts as finding nothing.
+5. Learned boosts (products that sell well from a listing): `productRanking` boosts lists them;
+   `manageProductRanking` acceptBoost or rejectBoost (`id`). The `search-learned-boosts` setting
+   decides whether they wait for review.
 
 ## Multi-way or one-way
 

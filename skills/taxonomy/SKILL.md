@@ -126,18 +126,17 @@ Items
 2. Design your hierarchy on paper/notes first — levels, attributes, and allowed values
 3. Build it with `manageTaxonomies`:
    - `create` (name, description) — returns the taxonomyId
-   - `addLevel` (taxonomyId, name, parentLevelId; leave parentLevelId out for a top-level level) — returns the new levelId
-   - `addAttribute` (taxonomyId, levelId, `attribute`: `{name, type, mandatory, allowedValues, helpText, displayLabel, displayOnProductPage, facetDisplay, unit, minValue, maxValue, minLength, maxLength, pattern}`) — returns the new attributeId. Ids are made from the name; give the same `attributeId` on sibling levels to make them one filter
+   - `addLevel` (taxonomyId, name, parentLevelId; leave parentLevelId out for a top-level level; optional `position`, 0-based, default last) — returns the new levelId
+   - `addAttribute` (taxonomyId, levelId, `attribute`: `{name, type, mandatory, allowedValues, helpText, displayLabel, displayOnProductPage, facetDisplay, unit, swatches, minValue, maxValue, minLength, maxLength, pattern, errorMessage}`) — returns the new attributeId. Ids are made from the name; give the same `attributeId` on sibling levels to make them one filter
    - `taxonomies` get — check the whole tree
-   - `setActive` — the first activation changes no product. Switching from another active taxonomy clears every product's classification: run it with `dryRun: true`, tell the user, then `confirm: true`
+   - `setActive` — the first activation changes no product. Switching from another active taxonomy clears every product's classification: run it with `dryRun: true`, tell the user, then `confirm: true` (which also needs the `mcp:admin` scope). `delete` needs `mcp:admin` too and refuses the active taxonomy
 4. `manageProductTaxonomy` assign — assign products to their appropriate levels
 5. `manageProductTaxonomy` updateAttributes — populate attribute values for each product
-6. `productTaxonomy` (skuId) — check completeness scores and find gaps
-7. Iterate: add attributes as new product categories emerge (`addAttribute`, or `updateAttribute` with `addValues` for new allowed values)
+6. `productTaxonomy` (skuId) — check completeness scores and find gaps. updateAttributes saves even invalid values, returning `valid: false` and `validationErrors`, and refuses attributes that don't apply at the product's level
+7. Iterate: add attributes as new product categories emerge (`addAttribute`, or `updateAttribute` with `addValues` / `removeValues` for the allowed values)
+8. Filters: `manageProductTaxonomy` setFilterDisplay (attributeId, `facetDisplay` LIST, SWATCH or RANGE, `unit` for a range, `swatches` value → #hex for values not named after a colour; no skuId) sets how an attribute filters listings. SWATCH doesn't suit NUMBER or BOOLEAN, RANGE doesn't suit BOOLEAN. Variant options (e.g. a size group) count towards a filter through `manageVariantGroups` setFilterMapping (code, attributeId, attributeValues option → filter value)
 
-**Changing a taxonomy that's in use.** Renaming, moving and removing levels, removing attributes or allowed values, and changing an attribute's type can leave data behind on products. Run the edit with `dryRun: true` first: its `impact` lists what products would lose. If it isn't empty, check with the user, then repeat with `confirm: true`. `updateAttribute` only changes the keys you send; send a key as `null` to clear it.
-
-**Tip:** Collections can have a `defaultTaxonomyLevelId` — when products are added to that collection, they're automatically assigned to the matching taxonomy level.
+**Changing a taxonomy that's in use.** Renaming is always safe (ids never change). Moving a level to another parent, removing levels, removing attributes or allowed values, and changing an attribute's type can leave data behind on products. Run the edit with `dryRun: true` first: its `impact` lists what products would lose. If it isn't empty, check with the user, then repeat with `confirm: true`. `updateAttribute` only changes the keys you send; send a key as `null` to clear it.
 
 ## Building a Category Tree From the Taxonomy
 

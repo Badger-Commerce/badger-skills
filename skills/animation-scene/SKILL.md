@@ -29,12 +29,13 @@ If the brief has `palette.gradient` set, the CSS compiler exposes it as `--gradi
 | Action | Tool |
 |--------|------|
 | Find existing extensions on an item | `extensionConfig` (itemType, itemId) |
-| Add a new animation scene | `manageExtensionConfig` add (extensionName: `animationScene`) |
-| Update the scene spec | `manageExtensionConfig` update — set the `sceneConfig` property (JSON string) |
+| List the slots the item renders | `extensions` listPageLocations (itemType, itemId) |
+| Add a new animation scene | `manageExtensionConfig` add (extensionName: `animationScene`, pageLocation: one of those slots) |
+| Update the scene spec | `manageExtensionConfig` update (extensionConfigId) — set the `sceneConfig` property |
 | Find images for static elements | `media` list |
 | Find a collection for product binding | `collections` list |
 
-The `sceneConfig` property stores a JSON **string**. When updating, pass the JSON stringified — Badger will compact it on save.
+The `sceneConfig` property stores a JSON **string**. Pass it as a string (stored as sent) or as an object (serialised for you). Only the JSON syntax is checked on save, not the scene's structure: an unknown element type is dropped at render time with a console warning, and a spec that fails to parse renders nothing useful. Write results show property sizes only; pass `echoValues: true` to see the stored spec.
 
 ## Scene Spec Structure
 
@@ -73,7 +74,7 @@ Every element has `type`, optional `id`, optional `style` (CSS properties as cam
 
 ### Style properties
 
-Use any CSS property (camelCase). Position is `absolute` by default. For layout inside groups/mockBrowser bodies, override `position: "relative"` on children.
+Use any CSS property (camelCase). Every element, children included, is `position: absolute` by default, so give it `top`/`left`. For flow layout inside groups/mockBrowser bodies, override `position: "relative"` on children.
 
 **Design-token-friendly values** — Nova CSS custom properties are available:
 - Colors: `var(--color-primary)`, `var(--color-gray-50)` → `var(--color-gray-900)`, `var(--color-success)`, `var(--color-error)`
@@ -134,7 +135,7 @@ Bindings are resolved server-side before the spec reaches the browser. Each bind
 
 ### Product item fields
 
-`{{item.id}}`, `{{item.name}}`, `{{item.seoName}}`, `{{item.skuId}}`, `{{item.price}}` (formatted, e.g. `£19.99`), `{{item.comparePrice}}`, `{{item.priceRaw}}` (integer pence), `{{item.url}}`, `{{item.primaryImage}}`, `{{item.thumbnailUrl}}`
+`{{item.id}}`, `{{item.name}}`, `{{item.seoName}}`, `{{item.skuId}}`, `{{item.price}}` (formatted as pounds, e.g. `£19.99`, whatever the site's currency), `{{item.comparePrice}}` (empty when unset), `{{item.priceRaw}}` (integer pence), `{{item.url}}`, `{{item.primaryImage}}`, `{{item.thumbnailUrl}}`
 
 ### Collection item fields
 
@@ -142,14 +143,14 @@ Bindings are resolved server-side before the spec reaches the browser. Each bind
 
 ## Tokens
 
-Tokens are substituted in every string value — `content`, `style`, `url`, `alt`, `href`, `ariaLabel`, inside `children`.
+Tokens are substituted in every string value of an element — `content`, `style`, `url`, `alt`, `href`, `ariaLabel`, inside `children`. Not in `canvas` or `timeline`: a token there stays literal. An unresolved token becomes an empty string.
 
 | Token | Resolves to |
 |---|---|
 | `{{item.field}}` | Field on the current repeat item |
 | `{{index}}` | 0-based index inside a repeat |
 | `{{count}}` | Total items in the repeat |
-| `{{config.key}}` | Site config value by key (scalar) |
+| `{{config.key}}` | A site config value the site has set itself (scalar). Unset keys (defaults aren't used), list keys and secrets give an empty string |
 
 ## Timeline
 
@@ -170,7 +171,7 @@ Tokens are substituted in every string value — `content`, `style`, `url`, `alt
 |---|---|
 | `immediate` | Runs as soon as the scene is built |
 | `onEnter` (default) | Runs once when the scene enters the viewport. `threshold` is the IntersectionObserver threshold (default 0.3) |
-| `scroll` | ScrollTrigger scrub — timeline progress bound to scroll position. Optional `start`, `end` (GSAP strings), `scrub` (true or number). Set `pin: true` for Apple-style multi-phase scroll stories: canvas auto-sizes to `100vh`, pin distance auto-computes from timeline duration at ≈200px scroll per second. Override `end: "+=Npx"` for explicit pin length |
+| `scroll` | ScrollTrigger scrub — timeline progress bound to scroll position. Optional `start`, `end` (GSAP strings), `scrub` (true or number). Set `pin: true` for Apple-style multi-phase scroll stories: canvas auto-sizes to `100vh`, pin distance auto-computes from timeline duration at 200px scroll per second, at least 600px. Only numeric `delay`s count towards the duration (a relative `"+=0.5"` counts as 0). Override `end: "+=Npx"` for explicit pin length |
 | `loop` | Runs in a loop forever. Optional `yoyo` (bool), `repeatDelay` (seconds) |
 
 ### Steps
@@ -384,7 +385,7 @@ Pinned canvas stays in view while the user scrolls through several phases — in
 ```
 
 **How it works:**
-- `pin: true` locks the canvas to the viewport while the user scrolls. Canvas auto-sizes to `100vh`; pin distance auto-computes as ≈200px × timeline duration (here ~9.6s → ~1920px of scroll)
+- `pin: true` locks the canvas to the viewport while the user scrolls. Canvas auto-sizes to `100vh`; pin distance auto-computes as 200px × timeline duration, at least 600px (here ~9.6s → ~1920px of scroll)
 - Override with `timeline.end: "+=1500"` etc. for an explicit pin length
 - `scrub: 1` smooths the timeline-to-scroll mapping (1 second of catch-up)
 - Elements start at `opacity: 0` so they're hidden before their tween arrives
@@ -413,7 +414,9 @@ Pinned canvas stays in view while the user scrolls through several phases — in
 
 ## Default Page Location
 
-`mainSection` — scenes render in the main content area by default. Use `bannerSection` for above-the-fold heroes.
+The extension's own default is `mainSection`, but MCP adds need an explicit `pageLocation`, and it must be a slot the item renders (`extensions` listPageLocations): a collection has no `mainSection`. Use `bannerSection` for above-the-fold heroes.
+
+Scenes render only on the Nova family of themes (Nova, Brock, Depot, Pop, Atelier, Spec, Ridge); the legacy `bootstrap` theme has no template. The rendered scene is cached for 2 minutes per item, so price and product changes can take that long to show.
 
 ## Decision Tree
 
@@ -424,16 +427,16 @@ Pinned canvas stays in view while the user scrolls through several phases — in
 
 ## Accessibility
 
-- The runtime auto-respects `prefers-reduced-motion: reduce` — tweens are skipped, but elements still render with their `to` end-state opacity so the page isn't broken.
+- The runtime auto-respects `prefers-reduced-motion: reduce` — tweens are skipped, and only a step's `to.opacity` is applied (transforms aren't). An element styled `opacity: "0"` stays invisible unless a step sets `opacity: 1` in its `to`, so always include it there.
 - Don't hide critical information behind an animation — the reduced-motion path should still look good.
-- Text inside scenes remains selectable and keyboard-focusable.
+- Text inside scenes remains selectable. Only elements with an `href` (rendered as links) take keyboard focus.
 
 ## Common Pitfalls
 
 - **Hardcoded pixel positions break on mobile.** Prefer `%`-based positioning, or use `calc()` with `{{index}}` for repeated layout. For pinned scroll scenes, `vh` and `%` are equivalent (canvas auto-sizes to `100vh`).
-- **Don't forget to absolute-position children of `mockBrowser` or `group`** — mock browser bodies are `position: relative`, so children need `style.position: "absolute"` and explicit `top`/`left`.
+- **Position children of `mockBrowser` or `group` explicitly** — children are absolute by default, so give them `top`/`left` (or override `position: "relative"` for flow layout).
 - **Selectors are CSS, not IDs** — use `#name` for singletons, `.name` for repeated elements (the `id` of a repeating template becomes the class).
-- **Don't mix `repeat` with data-less sources** — `product.current` and `collection.current` return at most 1 item, so `repeat` on them is legal but wasteful; drop `repeat` and use `{{item.*}}` only inside a non-repeating element with `binding.source = "product.current"` — *except that's not supported directly*; the cleaner path is: put the element inside a `repeat` block regardless, and accept the 1-item expansion.
+- **Use `repeat` even for single-item sources** — `product.current` and `collection.current` return at most 1 item, but a non-repeating element gets no `item`, so `{{item.*}}` from them only works through `repeat` (which expands to 1 copy, or 0 when there's nothing to bind).
 - **Scenes with 0 elements after binding resolution are invisible.** If a binding resolves to `[]` (e.g. the collection doesn't exist), repeated elements vanish. Always provide a sensible non-bound fallback element (e.g. a title).
 - **Don't exceed the viewport on mobile.** Test at 375px width — heavy mock-browser layouts often need mobile-specific widths.
 

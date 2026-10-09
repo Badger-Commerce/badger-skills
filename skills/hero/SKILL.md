@@ -20,8 +20,10 @@ When the tenant has set `palette.gradient`, the compiled CSS exposes `--gradient
 | Action | Tool |
 |--------|------|
 | Find existing extensions on an item | `extensionConfig` (itemType, itemId) |
-| Add a hero extension | `manageExtensionConfig` add (extensionName: "hero") |
-| Update hero configuration | `manageExtensionConfig` update — set the `heroConfig` property |
+| List the slots the item renders | `extensions` listPageLocations (itemType, itemId) |
+| Add a hero extension | `manageExtensionConfig` add (extensionName: "hero", pageLocation: "bannerSection") |
+| Update hero configuration | `manageExtensionConfig` update (extensionConfigId) — set the `heroConfig` property |
+| Add a photo the merchant gives you | `manageMedia` import (url or base64 content) |
 | Find images for backgrounds | `media` list |
 
 ## 5 Preset Layouts
@@ -38,17 +40,17 @@ Every preset also takes the optional slots `eyebrow`, `secondaryCta` and `stats`
 
 ## Configuration Format
 
-The `heroConfig` property stores a JSON string:
+The `heroConfig` property stores a JSON string (send a string or an object). Unlike jsonComponent it is only checked for JSON syntax: a slot that doesn't parse is dropped silently, so check the page after saving.
 
 ```json
 {
   "preset": "centered",
-  "backgroundImage": "/media/hero-bg.jpg",
+  "backgroundImage": "//images.bdgr.co.uk/acme/media/hero-bg.jpg",
   "backgroundOverlay": "dark",
   "slots": {
     "title": {"type": "heading", "props": {"text": "Welcome", "level": 1, "style": {"variant": "heading-xl", "color": "white"}}},
     "subtitle": {"type": "text", "props": {"text": "Discover our collection", "style": {"variant": "body-lg", "color": "white"}}},
-    "cta": {"type": "button", "props": {"text": "Shop Now", "action": {"type": "navigate", "href": "/collections"}, "style": {"variant": "button-primary"}}}
+    "cta": {"type": "button", "props": {"text": "Shop Now", "action": {"type": "navigate", "href": "/collection/new"}, "style": {"variant": "button-primary"}}}
   }
 }
 ```
@@ -58,11 +60,13 @@ The `heroConfig` property stores a JSON string:
 | Property | Type | Presets | Description |
 |----------|------|---------|-------------|
 | `preset` | string | All | One of: `centered`, `split-image`, `video-bg`, `gradient`, `minimal` |
-| `backgroundImage` | string | centered, gradient | URL to background image |
-| `backgroundOverlay` | string | centered, video-bg | `"dark"` (60%), `"medium"` (40%), `"light"` (20%) |
+| `backgroundImage` | string | centered, gradient | Background image URL, used verbatim (see Images). Without one, both fall back to a darkened brand gradient |
+| `backgroundOverlay` | string | centered, video-bg | `"dark"` (default), `"medium"` or `"light"`: a darkening gradient, strongest for dark. Any other value draws no overlay |
 | `videoUrl` | string | video-bg | URL to MP4 video file |
 | `backgroundEffect` | string | gradient, minimal, split-image | Animated canvas behind the copy: `"none"` (default), `"constellation"`, `"flowField"`, `"gridGlow"`. Ignored on other presets |
 | `backgroundEffectIntensity` | string | as above | `"subtle"` (default) or `"normal"` |
+| `height` | string | All | `"tall"` (default, about 70vh: a landing hero) or `"compact"` (as tall as its copy). Use `compact` for every hero except the home page's |
+| `contentAlign` | string | gradient, split-image | `"edge"` (default: the copy starts a fixed inset from the window edge) or `"container"` (the copy lines up with the page's content column, under the logo). Wide screens (1024px+) only; the centred presets ignore it |
 | `slots` | object | All | Map of slot name → JSON component definition |
 
 ## Animated Background Effects
@@ -95,13 +99,15 @@ Each slot value is a standard JSON component definition — the same types and s
 | `secondaryCta` | `button` | A second button beside `cta` (same props); usually `button-secondary` |
 | `stats` | any component, usually `row` | A strip of figures under the buttons, with a divider above. Convention: a `row` of `column`s, each a `heading` (the figure) plus a `text` (its label). `children` sits beside `props`, not inside it |
 
-Optional slots render only when present; omit a slot to hide it. `cta` and `secondaryCta` sit together in one flex row, centred or left-aligned to match the preset. Themes restyle the `nova-hero__eyebrow`, `nova-hero__actions` and `nova-hero__stats` wrappers (Ridge, for example, turns stats columns into divided cells).
+centered, gradient and video-bg are dark surfaces, so headings and text turn light by themselves; split-image and minimal are light. Slots get no data sources, so productGrid, productCarousel, productCard and `/data/...` bindings render empty in a hero.
+
+Optional slots render only when present; omit a slot to hide it. `cta` and `secondaryCta` sit together in one flex row, centred or left-aligned to match the preset. Themes restyle the `nova-hero__eyebrow`, `nova-hero__actions` and `nova-hero__stats` wrappers (Ridge, for example, turns stats columns into divided cells). On Ridge the home hero is the `gradient` preset with `eyebrow`, `secondaryCta`, `stats` and `contentAlign: "container"`: it gets a purple wash, a red accent bar and a pulsing dot before the eyebrow. A title is one heading, so there are no accent words.
 
 ### Style Tokens for Slots
 
 **Typography variants:** `heading-xl`, `heading-lg`, `heading-md`, `heading-sm`, `body-lg`, `body-md`, `body-sm`, `display-xl`, `display-lg`, `display-md`, `subheadline`, `overline`, `overline-pill`
 
-**Colors:** `white`, `primary`, `muted`, `black`, `secondary`, `gray`, `gray-light`, `gray-dark`
+**Colors:** `white`, `primary`, `muted`, `black`, `secondary`, `gray`, `gray-light`, `gray-dark`. On Nova `secondary` is a mid grey, not the brief's secondary colour.
 
 **Button variants:** `button-primary`, `button-secondary`
 
@@ -109,9 +115,13 @@ Optional slots render only when present; omit a slot to hide it. `cta` and `seco
 
 Use the `url` the MCP tools return for the target (`collections`, `pages`, `products` or `merchandisingTrees` node), as a site-relative path. Links in a hero aren't rewritten for you: on a category-tree site (`category-navigation-source` MERCH_TREE), link a category as `/c/...`, not `/collection/...`. A replaced collection's old URL only redirects, and a hidden one is a 404.
 
-## Default Page Location
+### Images
 
-`bannerSection` — heroes render above the main content area by default.
+`backgroundImage` and `heroImage` src are used verbatim; no base path is added. Use `shop.productImagePath` from `getDesignBrief` + `/` + the media `url` from the `media` tool (e.g. `//images.bdgr.co.uk/acme/media/hero.jpg`), or a full `https://` URL. A relative `media/...` path won't load.
+
+## Page Location
+
+`bannerSection`, above the main content. The admin defaults to it, but `manageExtensionConfig` add needs it passed as `pageLocation`.
 
 ## Examples
 
@@ -119,7 +129,7 @@ Use the `url` the MCP tools return for the target (`collections`, `pages`, `prod
 ```json
 {
   "preset": "centered",
-  "backgroundImage": "media/hero-banner.jpg",
+  "backgroundImage": "//images.bdgr.co.uk/acme/media/hero-banner.jpg",
   "backgroundOverlay": "dark",
   "slots": {
     "title": {"type": "heading", "props": {"text": "Summer Sale", "level": 1, "style": {"variant": "heading-xl", "color": "white"}}},
@@ -137,7 +147,7 @@ Use the `url` the MCP tools return for the target (`collections`, `pages`, `prod
     "title": {"type": "heading", "props": {"text": "New Arrivals", "level": 1, "style": {"variant": "heading-xl"}}},
     "subtitle": {"type": "text", "props": {"text": "Handpicked for quality and style", "style": {"variant": "body-lg", "color": "muted"}}},
     "cta": {"type": "button", "props": {"text": "Browse", "action": {"type": "navigate", "href": "/collection/new"}, "style": {"variant": "button-primary"}}},
-    "heroImage": {"type": "image", "props": {"src": "media/new-arrivals.jpg", "alt": "New arrivals collection"}}
+    "heroImage": {"type": "image", "props": {"src": "//images.bdgr.co.uk/acme/media/new-arrivals.jpg", "alt": "New arrivals collection"}}
   }
 }
 ```
@@ -149,7 +159,7 @@ Use the `url` the MCP tools return for the target (`collections`, `pages`, `prod
   "slots": {
     "title": {"type": "heading", "props": {"text": "Less is More", "level": 1, "style": {"variant": "heading-xl"}}},
     "subtitle": {"type": "text", "props": {"text": "Simple, thoughtful design", "style": {"variant": "body-lg", "color": "muted"}}},
-    "cta": {"type": "button", "props": {"text": "Explore", "action": {"type": "navigate", "href": "/collections"}, "style": {"variant": "button-secondary"}}}
+    "cta": {"type": "button", "props": {"text": "Explore", "action": {"type": "navigate", "href": "/collection/new"}, "style": {"variant": "button-secondary"}}}
   }
 }
 ```
@@ -162,8 +172,8 @@ Use the `url` the MCP tools return for the target (`collections`, `pages`, `prod
     "eyebrow": {"type": "text", "props": {"text": "Volunteer-run since 1962", "style": {"variant": "overline", "color": "white"}}},
     "title": {"type": "heading", "props": {"text": "On call for the hills, every day of the year", "level": 1, "style": {"variant": "heading-xl", "color": "white"}}},
     "subtitle": {"type": "text", "props": {"text": "Your support keeps the team equipped", "style": {"variant": "body-lg", "color": "white"}}},
-    "cta": {"type": "button", "props": {"text": "Donate", "action": {"type": "navigate", "href": "/donate"}, "style": {"variant": "button-primary"}}},
-    "secondaryCta": {"type": "button", "props": {"text": "Our work", "action": {"type": "navigate", "href": "/about"}, "style": {"variant": "button-secondary"}}},
+    "cta": {"type": "button", "props": {"text": "Donate", "action": {"type": "navigate", "href": "/p/donate"}, "style": {"variant": "button-primary"}}},
+    "secondaryCta": {"type": "button", "props": {"text": "Our work", "action": {"type": "navigate", "href": "/p/about-us"}, "style": {"variant": "button-secondary"}}},
     "stats": {"type": "row", "props": {"style": {"gap": "lg"}}, "children": [
       {"type": "column", "children": [
         {"type": "heading", "props": {"text": "140+", "level": 3, "style": {"variant": "heading-md", "color": "white"}}},
@@ -185,7 +195,7 @@ Use the `url` the MCP tools return for the target (`collections`, `pages`, `prod
   "slots": {
     "title": {"type": "heading", "props": {"text": "Experience the Difference", "level": 1, "style": {"variant": "heading-xl", "color": "white"}}},
     "subtitle": {"type": "text", "props": {"text": "Watch how our products are crafted", "style": {"variant": "body-lg", "color": "white"}}},
-    "cta": {"type": "button", "props": {"text": "Learn More", "action": {"type": "navigate", "href": "/about"}, "style": {"variant": "button-primary"}}}
+    "cta": {"type": "button", "props": {"text": "Learn More", "action": {"type": "navigate", "href": "/p/about-us"}, "style": {"variant": "button-primary"}}}
   }
 }
 ```
@@ -193,5 +203,6 @@ Use the `url` the MCP tools return for the target (`collections`, `pages`, `prod
 ## Decision Tree
 
 1. **Need a hero section?** → Use this extension (not freeform JSONComponent)
-2. **Need a layout beyond the 5 presets?** → Use `jsonComponent` with the hero as inspiration
-3. **Slots use the same JSON component syntax** as `jsonComponent` — same types, same style tokens
+2. **An appeal band, CTA strip or sidebar panel further down the page?** → `callToAction` (form-based, no JSON; see the `badger-mcp` skill's content page recipes)
+3. **Need a layout beyond the 5 presets?** → Use `jsonComponent` with the hero as inspiration
+4. **Slots use the same JSON component syntax** as `jsonComponent` — same types, same style tokens
