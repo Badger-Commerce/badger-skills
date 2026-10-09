@@ -4,8 +4,18 @@ Claude Code plugin providing agent skills for [Badger Commerce](https://www.bdgr
 
 ## Installation
 
+As a Claude Code plugin:
+
 ```bash
 claude plugin install badger-skills
+```
+
+Or into a project with [`skills`](https://www.npmjs.com/package/skills), which copies them into
+`.agents/skills/` (symlinked from `.claude/skills/`) and records them in `skills-lock.json`. This is
+how badger-commerce consumes them:
+
+```bash
+npx skills add Badger-Commerce/badger-skills --skill badger-mcp -a claude-code
 ```
 
 ## Skills
@@ -21,6 +31,25 @@ claude plugin install badger-skills
 | `search-tuning` | Diagnose search ("why doesn't X show for Y"), close zero-result gaps, manage synonyms and review AI suggestions | auto |
 
 Start with `/badger-mcp` for an overview of the platform and how the tools fit together. The other skills are triggered automatically when you're working in their domain.
+
+## Editing skills
+
+This repo is the only place skills are edited. The copies in a consuming project
+(`.agents/skills/`, `.claude/skills/`) are generated: an edit there is lost on the next refresh and
+never reaches anyone else.
+
+1. Branch from `main`, change `skills/<skill>/SKILL.md`, and open a PR. Check every tool, action,
+   parameter, extension and config key you mention against badger-commerce's `development` branch
+   (see `CLAUDE.md`).
+2. After the PR merges, refresh each consuming project from its root:
+
+   ```bash
+   npx skills update -p -y
+   ```
+
+   A skill the project doesn't have yet (e.g. a new one) is added with
+   `npx skills add Badger-Commerce/badger-skills --skill <name> -a claude-code`.
+3. A new skill also needs a row in the table above.
 
 ## Prerequisites
 
