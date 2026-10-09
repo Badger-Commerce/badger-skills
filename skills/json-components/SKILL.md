@@ -11,7 +11,7 @@ You are building JSON component definitions for Badger Commerce's `jsonComponent
 
 ## Stay on-brand: load the design brief first
 
-**Before generating components, call `getDesignBrief` via MCP.** Use the returned `palette` hex values rather than hardcoding colours, and match the `voice.tone` for any copy. Nova's CSS custom properties (e.g. `var(--color-primary)`) already inherit the brief's palette at runtime — but when you need an explicit hex value (background images, SVG fills, inline gradients), pull it from `getDesignBrief` rather than reusing colours from this skill's examples.
+**Before generating components, call `getDesignBrief` via MCP.** Use the returned `palette` hex values rather than hardcoding colours, and match the `voice.tone` for any copy. Nova's CSS custom properties (e.g. `var(--color-primary)`) already inherit the brief's palette at runtime — but when you need an explicit hex value (background images, SVG fills, inline gradients), pull it from `getDesignBrief` rather than reusing colours from this skill's examples. The brief's `shop.theme` tells you which token family applies (see Semantic Style Tokens) and `shop.productImagePath` is the base for media URLs (see Media).
 
 When the brief sets `palette.gradient`, prefer `background: var(--gradient-brand)` over reassembling a `linear-gradient(...)` from the palette. For card/surface backgrounds use `var(--color-surface)` and for heading-weight text use `var(--color-text-strong)` — both follow the tenant's brief (light-mode defaults when unset, brand-specific values when set, e.g. dark cards for dark-mode brands).
 
@@ -25,134 +25,107 @@ When the brief sets `palette.gradient`, prefer `background: var(--gradient-brand
 | Find images for use in components | `media` list |
 | List available page slots | `extensions` listPageLocations (itemType, itemId) |
 
-The `jsonComponent` config property must contain a JSON document with `"version": "1.0"` and a `component` field defining the component tree.
+The `jsonComponent` config property must contain a JSON document with `"version": "1.0"` and a `component` field defining the component tree (a JSON string or an object; it is validated on save, see Validation).
 
 ## Decision Tree: Which Extension to Use?
 
 1. **Need a hero section?** → Use the `hero` extension (5 curated presets, form-based editing)
 2. **Standard pattern, no purpose-built extension?** → Use `jsonComponent` with a starter template
 3. **Truly custom layout?** → Use `jsonComponent` freeform
+4. **Long-form prose (article/blog body, policy text, anything with lists or sub-headings)?** → Use `markdownFragment`. jsonComponent `text` is a plain, escaped `<p>`: no markdown, lists, links or line breaks. Article bodies go in `markdownFragment`; jsonComponent is for the layout pieces around them (hero, feature grid, CTA band, product strip).
 
 ---
 
 ## Component Catalog
 
+`(b)` = bindable (accepts `{"$ref": ...}`). Style keys listed are the ones the validator expects for that type; others draw a warning.
+
 ### Layout Components (have children)
 
-**container** — Layout wrapper with spacing/padding/background. Style: spacing, padding, background, backgroundImage, backgroundOverlay, backgroundPosition, backgroundSize, radius, shadow, maxWidth
+| Type | Props | Style keys |
+|------|-------|-----------|
+| container | — | spacing, padding, background, backgroundImage, backgroundOverlay, backgroundPosition, backgroundSize, radius, shadow, maxWidth, border, animation |
+| row | stackOnMobile (bool, default true) | gap, align, justify, animation |
+| column | width [1/4, 1/3, 1/2, 2/3, 3/4, full, auto] (default auto), mobileWidth [1/2, full, auto] (default full) | gap, align, maxWidth, animation |
+| tabs | children must be `tab` | variant |
+| tab | label (b), active (bool) | — |
+| accordion | allowMultiple (bool); children must be `accordionItem` | variant |
+| accordionItem | title (b), expanded (bool) | — |
 
-**row** — Horizontal flex container. Props: stackOnMobile (bool, default true). Style: gap, align, justify
+### Content Components (no children)
 
-**column** — Vertical flex, optional width. Props: width [1/4, 1/3, 1/2, 2/3, 3/4, full, auto], mobileWidth [1/2, full, auto]. Style: gap, align, maxWidth
+| Type | Props | Style keys |
+|------|-------|-----------|
+| heading | level (1-6, default 2), text (b) | variant, color, align, transform, tracking, textStyle |
+| text | text (b) — plain text only | variant, color, align, transform, tracking, textStyle |
+| link | text (b), href (b), action | variant |
+| button | text (b), icon [arrow-right, arrow-left, chevron-right, chevron-left, shopping-cart, shopping-bag, heart, star, check, plus, minus, search, download, upload, external-link, mail, phone, user, log-in, log-out], iconPosition [left, right] (default right), action | variant, color |
+| image | src (b), alt (b) | radius, shadow, width, height |
+| icon | name (see below), size [xs, sm, md, lg, xl] | color |
+| blockquote | quote (b), author (b), role (b), avatar (b) | variant, color, background |
 
-**tabs** — Tabbed content container. Style: variant. Children must be `tab` components.
+**icon names** (anything else is rejected): arrow-right, arrow-left, arrow-up, arrow-down, chevron-right, chevron-left, chevron-up, chevron-down, menu, x, check, plus, minus, search, settings, edit, trash, copy, download, upload, external-link, shopping-cart, shopping-bag, credit-card, tag, gift, percent, truck, package, mail, phone, message-circle, share, heart, star, thumbs-up, info, alert-circle, check-circle, x-circle, help-circle, user, users, log-in, log-out, home, calendar, clock, map-pin, eye, lock, shield, award, zap, sparkles, rocket
 
-**tab** — Individual tab panel. Props: label (bindable), active (bool)
+### Utility Components (no children)
 
-**accordion** — Collapsible sections. Props: allowMultiple (bool). Style: variant. Children must be `accordionItem`.
+| Type | Props | Style keys |
+|------|-------|-----------|
+| spacer | size [xs, sm, md, lg, xl] (default md) | — |
+| divider | thickness [thin, md, thick], lineStyle [solid, dashed, dotted] | color, spacing (no visible effect on Nova) |
+| carousel | images (array of `{src, alt, caption}`, each bindable), autoPlay (bool), interval (1000-30000ms, default 5000), showIndicators (bool), showControls (bool) | radius, shadow |
 
-**accordionItem** — Accordion section. Props: title (bindable), expanded (bool)
+### Product Components (no children)
 
-### Content Components
-
-**heading** — h1-h6 heading. Props: level (1-6, default 2), text (bindable). Style: variant, color, align, transform, tracking
-
-**text** — Paragraph text. Props: text (bindable). Style: variant, color, align, transform, tracking
-
-**link** — Navigation link. Props: text (bindable), href (bindable), action. Style: variant
-
-**button** — Clickable button. Props: text (bindable), icon [arrow-right, arrow-left, chevron-right, chevron-left, shopping-cart, shopping-bag, heart, star, check, plus, minus, search, download, upload, external-link, mail, phone, user, log-in, log-out], iconPosition [left, right], action. Style: variant, color
-
-**image** — Image element. Props: src (bindable), alt (bindable). Style: radius, shadow, width, height
-
-**icon** — Lucide icon. Props: name [arrow-right, arrow-left, arrow-up, arrow-down, chevron-right, chevron-left, chevron-up, chevron-down, menu, x, check, plus, minus, search, settings, edit, trash, copy, download, upload, external-link, shopping-cart, shopping-bag, credit-card, tag, gift, percent, truck, package, mail, phone, message-circle, share, heart, star, thumbs-up, info, alert-circle, check-circle, x-circle, help-circle, user, users, log-in, log-out, home, calendar, clock, map-pin, eye, lock, shield, award, zap, sparkles, rocket], size [xs, sm, md, lg, xl]. Style: color
-
-**blockquote** — Quote with attribution. Props: quote (bindable), author (bindable), role (bindable), avatar (bindable). Style: variant, color, background
-
-### Utility Components
-
-**spacer** — Vertical/horizontal gap. Props: size [xs, sm, md, lg, xl]
-
-**divider** — Horizontal line. Props: thickness [thin, md, thick], lineStyle [solid, dashed, dotted]. Style: color, spacing
-
-**carousel** — Image carousel. Props: images (array), autoPlay (bool), interval (1000-30000ms, default 5000), showIndicators (bool), showControls (bool). Style: radius, shadow
-
-### Product Components
-
-**productGrid** — Responsive product card grid from data source. Props: dataSource, columns (2-6, default 4), mobileColumns (1-3, default 2), showPrice (bool), showDescription (bool), cardVariant [standard, compact, featured]. Style: gap, padding, background, radius
-
-**productCarousel** — Scrollable product strip from data source. Props: dataSource, autoScroll (bool), scrollInterval (ms), showPrice (bool), cardVariant [standard, compact, featured]. Style: gap, padding, background, radius
-
-**productCard** — Single product card from data source at index. Props: dataSource, index (0-100), showImage (bool), showPrice (bool), showDescription (bool), variant [standard, compact, featured]. Style: padding, background, radius, shadow
+| Type | Props | Style keys |
+|------|-------|-----------|
+| productGrid | dataSource, columns (2-6, default 4), mobileColumns (1-3, default 2), showPrice, showDescription, cardVariant [standard, compact, featured] | gap, padding, background, radius |
+| productCarousel | dataSource, autoScroll (bool), scrollInterval (1000-30000ms), showPrice, cardVariant | gap, padding, background, radius |
+| productCard | dataSource, index (0-100), showImage, showPrice, showDescription, variant [standard, compact, featured] | padding, background, radius, shadow |
 
 ---
 
 ## Semantic Style Tokens
 
-Use these in the `"style"` prop. Never use raw CSS values.
+Use these in the `"style"` prop. Never use raw CSS values. Unknown token values are silently dropped (no error).
 
-### Typography (variant)
-| Token | Use |
-|-------|-----|
-| heading-xl | Display/hero headings |
-| heading-lg | h1 equivalent |
-| heading-md | h2 equivalent |
-| heading-sm | h3 equivalent |
-| body-lg | Lead paragraphs |
-| body-md | Standard body text |
-| body-sm | Captions, fine print |
-| button-primary | Primary button |
-| button-secondary | Secondary button |
-| link | Link text |
+**Theme families:** nova, brock, depot, pop, atelier, spec and ridge use the Nova mapping; every other theme (bootstrap and anything unmapped) uses the Bootstrap mapping. Tokens marked *Nova* only render properly on the Nova family; Bootstrap gets a plain fallback (noted).
 
-### Colors (color)
-Base: primary, secondary, muted, success, error, warning
-Light/dark variants: primary-light, primary-dark, secondary-light, secondary-dark, success-light, success-dark, error-light, error-dark, warning-light, warning-dark
-Grays: gray-light, gray, gray-dark
-Utility: white, black
+Aliases: `backgroundColor` = `background`, `textAlign` = `align`, `borderRadius` = `radius`.
 
-### Background (background)
-Surfaces: surface, surface-light, surface-dark, white, transparent
-Primary: primary, primary-light, primary-dark
-Status: success, success-light, error, error-light, warning, warning-light
-Grays: gray-light, gray, gray-dark
+| Key | Tokens | Notes |
+|-----|--------|-------|
+| variant (type) | heading-xl, heading-lg, heading-md, heading-sm, body-lg, body-md, body-sm, link | heading-xl = display, lg ≈ h1, md ≈ h2, sm ≈ h3; body-lg = lead |
+| variant (marketing) | display-xl, display-lg, display-md, subheadline, overline, overline-pill, link-arrow | Big fluid headlines, lead copy, small-caps kicker (pill = badge), "Read more →" link. Bootstrap: inline approximations |
+| variant (button) | button-primary, button-secondary | |
+| color | primary, secondary, muted, success, error, warning; primary-light/-dark, secondary-light/-dark, success-light/-dark, error-light/-dark, warning-light/-dark; gray-light, gray, gray-dark; white, black | |
+| background | surface, surface-light, surface-dark, white, transparent, secondary, muted, primary, primary-light, primary-dark, primary-subtle, success, success-light, error, error-light, warning, warning-light, gray-light, gray, gray-dark | |
+| background (dark/pattern) | dark, gradient-dark, mesh-dark, gradient, mesh, dots | Nova: themed section surfaces. Bootstrap: mesh = plain white, mesh-dark = plain dark |
+| padding | none (0), xs (4px), sm (8), md (16), lg (24), xl (32), 2xl (64), 3xl (96), section (64 / 24 sides), section-lg (96 / 24 sides) | Use section / section-lg for full-width bands |
+| gap | none, xs, sm, md, lg, xl, 2xl (48px), 3xl (64px) | |
+| spacing | none, xs, sm, md, lg, xl | Sets the gap between a container's children |
+| align | left, center, right, start, end | center also centres flex children |
+| justify | start, center, end, between, around | |
+| radius | none, sm, md, lg, full | |
+| shadow | none, sm, md, lg, xl | |
+| border | default, light, dark, none, accent-top, gradient-top | Bootstrap: gradient-top = solid accent |
+| width / height | full, auto | |
+| maxWidth | prose (65ch), sm (640px), md (768px), lg (1024px), xl (1280px), full, none | Constrained widths are centred |
+| transform | uppercase, lowercase, capitalize, none | |
+| tracking | tight, normal, wide, wider, widest | |
+| textStyle | gradient | Gradient-filled text |
+| animation | reveal, stagger | Scroll-in reveal; stagger animates children in turn. *Nova only* (no-op on Bootstrap) |
+| backgroundImage | URL string (container) | See Media |
+| backgroundPosition | center, top, bottom, left, right | |
+| backgroundSize | cover, contain, auto | |
+| backgroundOverlay | none, light (30%), medium (50%), dark (70%), heavy (85%) | Black overlay, only with backgroundImage |
 
-### Spacing/Padding/Gap (spacing, padding, gap)
-none (0), xs (4px), sm (8px), md (16px), lg (24px), xl (32px)
-
-### Alignment (align) / Justify (justify)
-align: left, center, right, start, end
-justify: start, center, end, between, around
-
-### Border Radius (radius)
-none, sm, md, lg, full (pill/circle)
-
-### Shadow (shadow)
-none, sm, md, lg, xl
-
-### Width/Height (width, height)
-full (100%), auto
-
-### Max Width (maxWidth)
-prose (65ch), sm (640px), md (768px), lg (1024px), xl (1280px), full, none
-
-### Text Transform (transform)
-uppercase, lowercase, capitalize, none
-
-### Letter Spacing (tracking)
-tight (-0.025em), normal, wide (0.025em), wider (0.05em), widest (0.1em)
-
-### Background Image (on container)
-backgroundImage: URL string (e.g., "media/hero.jpg")
-backgroundPosition: center, top, bottom, left, right
-backgroundSize: cover, contain, auto
-backgroundOverlay: none, light (30%), medium (50%), dark (70%), heavy (85%)
+**Dark sections (Nova):** background primary, primary-dark, dark, gradient-dark and mesh-dark make headings white and switch overlines/buttons to on-dark colours automatically, and body text turns light. Don't add `color` tokens to text inside them.
 
 ---
 
 ## Data Binding
 
-Use `{"$ref": "/context/path", "fallback": "default"}` for dynamic values. Optional `"format"`: capitalize, uppercase, lowercase, trim.
+Use `{"$ref": "/context/path", "fallback": "default"}` for dynamic values. Optional `"format"`: capitalize, uppercase, lowercase, trim. Valid contexts: user, order, siteContext, item, lastOrder, data (anything else is rejected).
 
 ### Context Paths
 
@@ -165,6 +138,7 @@ Use `{"$ref": "/context/path", "fallback": "default"}` for dynamic values. Optio
 | /item/* (collection) | /item/name, /item/description, /item/seoName |
 | /item/* (page) | /item/name, /item/attributes/{key} |
 | /lastOrder/* | Same as /order/* but for last completed order (order confirmation pages) |
+| /data/* | /data/{sourceName}/0/productName (see Data Sources) |
 
 ---
 
@@ -188,19 +162,20 @@ Declare at root level alongside `"component"`:
 |------|--------|-------------|
 | trending-products | limit (int, default 8), hoursToCheck (int, default 24) | Trending products by recent views |
 | collection-products | collection (seoName, required), limit (int, default 12), offset (int, default 0), inStockOnly (bool, default false) | Products from a collection |
+| merchandising-node-products | nodeId OR path (canonical, e.g. "/c/womens/coats"; nodeId wins), treeId (default primary tree), limit (int, default 12), offset (int, default 0) | Products in a category-tree (merchandising) node |
 | recently-viewed | limit (int, default 10) | User's recently viewed products (requires login) |
 
 `collection-products` reads the collection as a product set, so it works on a category-tree site too, even when the collection's own page is replaced or hidden.
 
-Reference in components via `"dataSource": "mySource"` prop. Also accessible via `$ref`: `/data/{sourceName}/0/productName`.
+Reference in components via `"dataSource": "mySource"` prop. Also accessible via `$ref`: `/data/{sourceName}/0/productName`. An unknown node or collection renders an empty list, not an error.
 
 ---
 
 ## Media
 
-For media library images, use relative paths like `"media/hero-banner.jpg"` — the system prepends the site's productImagePath automatically.
+`image` src, `blockquote` avatar, `carousel` image src and `backgroundImage` are used **verbatim** — no base path is added. Use an absolute URL: `shop.productImagePath` from `getDesignBrief` + `/` + the media `url` from the `media` tool (e.g. `//images.bdgr.co.uk/acme/media/hero.jpg`), or a full `https://` URL.
 
-For product images via data binding: `{"$ref": "/item/images/0/url"}`
+Product images from a data source (productGrid/productCarousel/productCard) are prefixed for you. A bound `{"$ref": "/item/images/0/url"}` is not prefixed, so a relative image path won't load in an `image`.
 
 ---
 
@@ -212,6 +187,12 @@ Set `"layout"` at root level:
 
 For full-width background with constrained content: use `"layout": "fluid"` with a container child that has `"maxWidth": "prose"` or similar.
 
+## Validation
+
+`manageExtensionConfig` rejects the save on **errors**: missing `component` or `type`; unknown component type; `children` on a leaf type or not an array; enum value outside its list (icon name, width, size, cardVariant…); wrong value type (number/boolean/string); `$ref` on a non-bindable prop, not starting with `/`, or with an unknown context; `action` without `type: "navigate"` and `href`.
+
+It saves with **warnings** (and ignores the field): unknown prop, unknown node field, style key not listed for that type, unknown `format`. Token values are not checked: a misspelt token just renders nothing.
+
 ## Rules
 
 1. Wrap in `{"version": "1.0", "component": {...}}`
@@ -221,6 +202,7 @@ For full-width background with constrained content: use `"layout": "fluid"` with
 5. Output valid JSON only — no markdown, no explanations
 6. Prices are in cents
 7. Use meaningful fallback values for data bindings
+8. `text` is plain text; long-form copy goes in `markdownFragment` (see Decision Tree)
 
 ---
 

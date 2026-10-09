@@ -37,7 +37,8 @@ Every read tool has a `manage*` twin for writes (`products` / `manageProducts`,
    heroConfig and sceneConfig as JSON; jsonComponent is validated and the error names the fault.
 5. `manageExtensionConfig` update (extensionConfigId from step 4 or from `extensionConfig`):
    properties, pageLocation to move it, enabled false to hide it. Order within a slot is
-   `properties.displayPriority`, lowest first (default 1000).
+   `properties.displayPriority`, lowest first (default 1000, but some blocks default lower, e.g.
+   callToAction at 500, so set it whenever a slot holds more than one block).
 6. Call `getDesignBrief` first if you're producing anything visual.
 
 ## Make the shop ready to trade
@@ -91,6 +92,82 @@ reason to stay. After creating the catalogue and pages:
    /product/...); never guess. On a tree site a collection's `url` may be its category, or null
    when it has no page.
 
+## Blogs and blog posts
+A blog is two kinds of page, and both must be shaped the way the admin's Blog screen makes them.
+A blog page that's just a page with the right template still renders, but the admin's blog
+list and the RSS feed (`/rss/<blog seoName>`) can't find it.
+- **The blog** (the list page): stereotypeId `blogPage`, parentPageIds `["blogs"]` (the fixed
+  parent every blog sits under, not a real page), template `blog/blogList`. `managePages` create
+  with stereotypeId `blogPage` sets the parent and template for you.
+- **A post**: stereotypeId `blogPost`, parentPageIds `[<blog seoName>]`. The template
+  (`blog/blogPost`) is picked for you, and the seoName is prefixed with the blog's
+  (`blog/my-post`).
+
+1. Find the blog: `pages` get with its seoName (new shops come with `blog`). Check it has
+   stereotypeId `blogPage` and parentPageIds `["blogs"]`. If either is missing, fix it with
+   `managePages` update (pageId, stereotypeId `blogPage`, parentPageIds `["blogs"]`) before
+   adding posts: update doesn't fill them in. No blog yet: `managePages` create (title,
+   seoName, stereotypeId `blogPage`).
+2. `pages` listChildren parentSeoName <blog seoName> lists the posts already there.
+3. Write a post: `managePages` create (title, seoName, description, stereotypeId `blogPost`,
+   parentPageIds [<blog seoName>], publishedDate). The description is the standfirst under the
+   masthead title and on cards. publishedDate is the date the blog shows and sorts by; without
+   it the post is dated today.
+4. Image: `managePages` setImages with one `media` id. It fills the inherited
+   `blogMastheadExtension` in `bannerSection`, which is the post's banner (so no hero), and is
+   also the blog card and the link preview. The masthead's byline is the page's `author`
+   attribute, which managePages can't set (admin post editor).
+5. Body, in `mainSection` (itemId is the post's full seoName, `blog/my-post`): prose (see the
+   shared blocks below), with optional quote and images jsonComponents between the prose, then
+   `blogRelatedArticlesExtension` (`excludeCurrentPost` defaults to true) last.
+6. Optional: a cta variant `panel` in `rightSection`. Anything there puts the post beside a
+   sidebar; without it the post is one centred column.
+7. Link the blog (not each post) from the navigation, and check the post's `url`.
+
+## Content page recipes
+Standard page shapes. First: `getDesignBrief` for the voice, `media list` for real photos (never
+made-up URLs), and `extensions listPageLocations` (itemType `page`, itemId the page's full
+seoName) for its slots. Each block is a `manageExtensionConfig` add on itemType `page`; give
+every block in a slot a `displayPriority` (100, 200, ...) so they keep your order. Several
+hundred words in all.
+
+Blocks the recipes share:
+- **prose**: `markdownFragment` with `html` (the markdown), `cssStyle: "blog"`, `staticMode: true`.
+  Long-form text only, one block for a run of prose, no raw HTML.
+- **quote / images / facts**: `jsonComponent` with `"layout": "contained"` (`json-components`
+  skill). Quote: a `blockquote` (quote, author, role). Images: one `image`; 2-3 as a `row` of
+  `column`s with an `image` each; 4+ as a `carousel`; alt text from the media. Facts: a `row` of
+  `column`s, each an `icon` (Lucide name, e.g. `calendar`, `clock`, `map-pin`, `mail`, `user`,
+  `award`) + `heading` + `text`.
+- **cta**: `callToAction` with `variant` (`band`, `strip`, `panel`, `stat`; default `band`),
+  `eyebrow`, `heading`, `text`, `value` (the figure, for `stat`), `primaryLabel` + `primaryUrl`,
+  optional `secondaryLabel` + `secondaryUrl`. Links are site paths (`/p/donate`), anchors, https,
+  `mailto:` or `tel:`; a button missing its label or link is dropped.
+- **hero**: `hero` with a `heroConfig` JSON string (`hero` skill).
+
+**News or blog post**: see Blogs and blog posts above.
+
+**Profile page** (staff, trustee or volunteer bio)
+1. `managePages` create: title = the person's name, seoName, description (stereotype defaults to
+   `defaultPage`).
+2. `bannerSection`: hero preset `split-image`: `heroImage` = their portrait (library url, alt = the
+   name), `title` = name, `subtitle` = role. No portrait in the library: ask for one rather than
+   leave the placeholder.
+3. `mainSection`: prose biography, a facts row (expertise, qualifications, contact), a quote.
+4. cta variant `strip` after them.
+
+**Event page**
+1. `managePages` create (stereotype `defaultPage`).
+2. `bannerSection`: hero preset `centered`, `eyebrow` = the date, `title`, `subtitle`, `cta` = the
+   book or register button.
+3. `mainSection`: facts row (`calendar` date, `clock` time, `map-pin` place), prose description
+   and agenda, then `faqExtension`: `title`, and `questions` and `answers` as two lists of equal
+   length matched by index (answers may hold HTML); optional `style` `default`, `compact` or
+   `bordered`.
+4. Optional `openStreetMapExtension` (`latitude`, `longitude`, `markerTitle`, `zoomLevel`) only
+   with the venue's real coordinates: without them it centres on London.
+5. cta variant `band` in `bottomBanner`.
+
 ## Set up a collection page
 1. `manageCollections` create: name, seoName. Nesting under a parent is admin-UI only for now.
 2. `manageProducts` addToCollection for each product.
@@ -138,6 +215,22 @@ collection-based shop onto a tree: use the `category-trees` skill (`merchandisin
 
 Searches that find nothing, or "why doesn't X show when I search for Y": use the `search-tuning`
 skill (`synonyms` explain and gaps, `manageSynonyms`).
+
+## Share a "buy now" or "donate" link
+For a QR code, an email, a social post or a button on another website: a direct checkout link
+puts one product in an order of its own and opens checkout. The shopper's basket isn't touched,
+and on checkout they can still change the amount (donations) or quantity, and add Gift Aid.
+1. `products` get: `buyUrl` is the bare link (`https://{shop}/buy/{seoName}`).
+2. Add parameters as needed:
+   - `amount=N` for an open-amount product (a donation or other PRICE_AS_QUANTITY product), in
+     whole pounds (`amount=2` is £2); `qty=N` for anything else, including a fixed-price
+     donation (quantityType FIXED or SELECTABLE). Values outside the product's min/max are
+     clamped.
+   - `v=variantSku` for a product with variants. Without one, the shopper lands on the product
+     page to choose.
+   - `src=label` (e.g. `src=summer-fair-2026`) to see which link raised what: it's saved on every
+     order made through it.
+3. The product must be enabled. Don't open the link to test it: every visit creates an order.
 
 ## Variants
 1. `variantGroups` list to see existing groups (e.g. colour, size).

@@ -34,6 +34,8 @@ When the tenant has set `palette.gradient`, the compiled CSS exposes `--gradient
 | `gradient` | BG image with angled CSS gradient, left-aligned text | title, subtitle, cta |
 | `minimal` | Clean white surface with centered large typography | title, subtitle, cta |
 
+Every preset also takes the optional slots `eyebrow`, `secondaryCta` and `stats` (see Slot Component Types). Hero templates exist only for the Nova family of themes (Nova, Brock, Ridge, Atelier, ...); the legacy `bootstrap` theme has none.
+
 ## Configuration Format
 
 The `heroConfig` property stores a JSON string:
@@ -88,11 +90,16 @@ Each slot value is a standard JSON component definition — the same types and s
 | `title` | `heading` | `text`, `level` (1-6), `style.variant`, `style.color` |
 | `subtitle` | `text` | `text`, `style.variant`, `style.color` |
 | `cta` | `button` | `text`, `action.type` ("navigate"), `action.href`, `style.variant` |
-| `heroImage` | `image` | `src`, `alt` |
+| `heroImage` | `image` | `src`, `alt` (split-image only; a placeholder shows when absent) |
+| `eyebrow` | `text` | A short line above the title. `style.variant` `overline` or `overline-pill` suits it |
+| `secondaryCta` | `button` | A second button beside `cta` (same props); usually `button-secondary` |
+| `stats` | any component, usually `row` | A strip of figures under the buttons, with a divider above. Convention: a `row` of `column`s, each a `heading` (the figure) plus a `text` (its label). `children` sits beside `props`, not inside it |
+
+Optional slots render only when present; omit a slot to hide it. `cta` and `secondaryCta` sit together in one flex row, centred or left-aligned to match the preset. Themes restyle the `nova-hero__eyebrow`, `nova-hero__actions` and `nova-hero__stats` wrappers (Ridge, for example, turns stats columns into divided cells).
 
 ### Style Tokens for Slots
 
-**Typography variants:** `heading-xl`, `heading-lg`, `heading-md`, `heading-sm`, `body-lg`, `body-md`, `body-sm`
+**Typography variants:** `heading-xl`, `heading-lg`, `heading-md`, `heading-sm`, `body-lg`, `body-md`, `body-sm`, `display-xl`, `display-lg`, `display-md`, `subheadline`, `overline`, `overline-pill`
 
 **Colors:** `white`, `primary`, `muted`, `black`, `secondary`, `gray`, `gray-light`, `gray-dark`
 
@@ -143,6 +150,28 @@ Use the `url` the MCP tools return for the target (`collections`, `pages`, `prod
     "title": {"type": "heading", "props": {"text": "Less is More", "level": 1, "style": {"variant": "heading-xl"}}},
     "subtitle": {"type": "text", "props": {"text": "Simple, thoughtful design", "style": {"variant": "body-lg", "color": "muted"}}},
     "cta": {"type": "button", "props": {"text": "Explore", "action": {"type": "navigate", "href": "/collections"}, "style": {"variant": "button-secondary"}}}
+  }
+}
+```
+
+### Eyebrow, two buttons and stats
+```json
+{
+  "preset": "gradient",
+  "slots": {
+    "eyebrow": {"type": "text", "props": {"text": "Volunteer-run since 1962", "style": {"variant": "overline", "color": "white"}}},
+    "title": {"type": "heading", "props": {"text": "On call for the hills, every day of the year", "level": 1, "style": {"variant": "heading-xl", "color": "white"}}},
+    "subtitle": {"type": "text", "props": {"text": "Your support keeps the team equipped", "style": {"variant": "body-lg", "color": "white"}}},
+    "cta": {"type": "button", "props": {"text": "Donate", "action": {"type": "navigate", "href": "/donate"}, "style": {"variant": "button-primary"}}},
+    "secondaryCta": {"type": "button", "props": {"text": "Our work", "action": {"type": "navigate", "href": "/about"}, "style": {"variant": "button-secondary"}}},
+    "stats": {"type": "row", "props": {"style": {"gap": "lg"}}, "children": [
+      {"type": "column", "children": [
+        {"type": "heading", "props": {"text": "140+", "level": 3, "style": {"variant": "heading-md", "color": "white"}}},
+        {"type": "text", "props": {"text": "Call-outs a year", "style": {"variant": "body-sm", "color": "white"}}}]},
+      {"type": "column", "children": [
+        {"type": "heading", "props": {"text": "24/7", "level": 3, "style": {"variant": "heading-md", "color": "white"}}},
+        {"type": "text", "props": {"text": "Volunteers on call", "style": {"variant": "body-sm", "color": "white"}}}]}
+    ]}
   }
 }
 ```
