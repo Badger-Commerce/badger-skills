@@ -112,7 +112,7 @@ Items
 - Set `displayOnProductPage: true` for attributes customers care about
 - Use clear `displayLabel` values (e.g., "Care Instructions" not "care-instructions")
 - Use `helpText` to guide admin users filling in values (e.g., "Enter dimensions as L × W × H in cm")
-- Set `displayOrder` to control the order attributes appear on product pages
+- Attributes appear on product pages in the order they sit on their level: add them in the order you want them shown
 
 ### Design Principles
 - **Start broad, refine later** — begin with 2-3 levels and expand as needed
@@ -122,13 +122,20 @@ Items
 
 ## Workflow
 
-1. `taxonomies` getActive — check if a taxonomy already exists
+1. `taxonomies` getActive — check if a taxonomy already exists (`taxonomies` list shows them all; `active` marks the one in use)
 2. Design your hierarchy on paper/notes first — levels, attributes, and allowed values
-3. Create the taxonomy and its levels and attributes in the admin UI (the MCP `taxonomies` tool is read-only)
+3. Build it with `manageTaxonomies`:
+   - `create` (name, description) — returns the taxonomyId
+   - `addLevel` (taxonomyId, name, parentLevelId; leave parentLevelId out for a top-level level) — returns the new levelId
+   - `addAttribute` (taxonomyId, levelId, `attribute`: `{name, type, mandatory, allowedValues, helpText, displayLabel, displayOnProductPage, facetDisplay, unit, minValue, maxValue, minLength, maxLength, pattern}`) — returns the new attributeId. Ids are made from the name; give the same `attributeId` on sibling levels to make them one filter
+   - `taxonomies` get — check the whole tree
+   - `setActive` — the first activation changes no product. Switching from another active taxonomy clears every product's classification: run it with `dryRun: true`, tell the user, then `confirm: true`
 4. `manageProductTaxonomy` assign — assign products to their appropriate levels
 5. `manageProductTaxonomy` updateAttributes — populate attribute values for each product
 6. `productTaxonomy` (skuId) — check completeness scores and find gaps
-7. Iterate: add attributes as new product categories emerge
+7. Iterate: add attributes as new product categories emerge (`addAttribute`, or `updateAttribute` with `addValues` for new allowed values)
+
+**Changing a taxonomy that's in use.** Renaming, moving and removing levels, removing attributes or allowed values, and changing an attribute's type can leave data behind on products. Run the edit with `dryRun: true` first: its `impact` lists what products would lose. If it isn't empty, check with the user, then repeat with `confirm: true`. `updateAttribute` only changes the keys you send; send a key as `null` to clear it.
 
 **Tip:** Collections can have a `defaultTaxonomyLevelId` — when products are added to that collection, they're automatically assigned to the matching taxonomy level.
 
@@ -138,7 +145,7 @@ On a site with a merchandising tree (the `/c/` category pages; see the `category
 
 ### Levels become categories
 - Back each browsable category with a `taxonomyProjection`: `{"type": "taxonomyProjection", "taxonomyLevelId": "<levelId>"}`. It lists products assigned to that level **or any level beneath it**, so a parent category fills itself from its children.
-- `taxonomies` getActive gives the `levelId`s, and each attribute's `attributeId` and `allowedValues`.
+- `taxonomies` get gives the `levelId`s, and each attribute's `attributeId` and `allowedValues`.
 - The tree doesn't have to mirror the taxonomy one to one. A heading with no products of its own is a `group` category, and a level too broad for shoppers can be split with attribute filters (below).
 
 ### Attribute filters: subcategories and cross-cutting pages
