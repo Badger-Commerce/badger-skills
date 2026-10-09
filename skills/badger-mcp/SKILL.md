@@ -34,6 +34,24 @@ set quantityType `FIXED`, or the storefront shows "Give any amount". A monthly g
 `subscriptionProduct` and `donationProduct`, quantityType `FIXED`, and a
 `donationFormExtension` on it for the Gift Aid tick; with `subscriptionProduct` alone it recurs
 but records no donations. Gift Aid on recurring gifts needs the Charity plan or Enterprise.
+Each tier then needs a Stripe price: see Subscription prices below.
+
+## Subscription prices (monthly giving, memberships)
+A subscription SKU (a variant, or a product without variants, with type `subscriptionProduct`)
+renews at a Stripe recurring price. Never ask the owner for a Stripe price ID; these tools make
+and change prices in Stripe for them. Stripe must be connected (test mode is fine to set up).
+1. `subscriptionPrices` list: existing prices, and `unpricedSkus` that still need one.
+2. `manageSubscriptionPrices` create per SKU: `sku` (the variant SKU), `amount` (minor units),
+   `interval` (default month). It also sets the SKU's own price to match, so the first payment
+   (taken at checkout) and the renewals agree. Pass an `idempotencyKey` so a retry makes no
+   second price.
+3. To change an amount: `manageSubscriptionPrices` change with `priceId` and the new `amount`,
+   `dryRun: true` first. Existing subscribers stay on what they pay unless `subscribers: "move"`
+   (new amount from their next renewal; ask the owner first, and tell them to warn their
+   supporters, since nobody is emailed).
+4. `subscriptionPrices` check after going live, or when something looks wrong; then
+   `manageSubscriptionPrices` sync recreates prices missing from live mode or archived.
+A price made in the Stripe dashboard is adopted with `manageSubscriptionPrices` link.
 
 ## Add content to a page, product or collection
 1. `pages` get (or `products` / `collections` get) to find the item.
