@@ -53,6 +53,29 @@ and change prices in Stripe for them. Stripe must be connected (test mode is fin
    `manageSubscriptionPrices` sync recreates prices missing from live mode or archived.
 A price made in the Stripe dashboard is adopted with `manageSubscriptionPrices` link.
 
+## Events and tickets
+An event is one product with type `eventTicket`, one product per date. Its variants are the ticket
+types (Adult, Child, Family), and each variant's stock is how many of that type can be sold. Every
+unit sold is one ticket with its own QR code, which staff scan at the door with the Badger app.
+1. `manageProducts` create with `productTypeDecorators` `["eventTicket"]` and an `event` object:
+   `start` (required, ISO-8601 such as `2026-12-05T19:00`, in the shop's time zone unless it carries
+   an offset), and optionally `end`, `venue`, `checkInOpensMinutesBefore` (default 120),
+   `salesCloseMinutesBefore` (leave it out to sell until the event ends, so the door can sell) and
+   `admitsPerTicket` (default 1). It defaults to no shipping. Change the details later with
+   `manageProducts` update and only the `event` fields that change; `""` clears one.
+2. Ticket types: `manageVariants` create per type (e.g. `variantAttributes {"ticket": "Adult"}`).
+   A variant that admits several people (a family ticket) needs its own `admitsPerTicket`
+   attribute. Without variants the event has a single ticket type.
+3. Capacity: `manageInventory` set on each ticket type's SKU. Checkout refuses an order once a type
+   is sold out, so the stock is the hard limit.
+4. Attendance: `tickets` list for every event with tickets issued, checked in and void; `tickets`
+   get with the event's `skuId` for the tally per type and a page of tickets (filter `status`
+   ISSUED, CHECKED_IN or VOID).
+Door staff need the POS Agent role and **Check in event tickets** under Settings, POS agents in the
+admin; the MCP tools can't grant either. Manual check-in, undo and voiding are in the admin's
+attendance page (Orders, Event tickets), not in MCP. Tickets can't be returned: refund the order,
+which voids them.
+
 ## Add content to a page, product or collection
 1. `pages` get (or `products` / `collections` get) to find the item.
 2. `extensions` listPageLocations with itemType and itemId: the slots that item really renders.
