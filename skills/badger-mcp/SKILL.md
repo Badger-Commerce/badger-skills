@@ -15,7 +15,9 @@ Every read tool has a `manage*` twin for writes (`products` / `manageProducts`,
 `collections` / `manageCollections`, ...). A read-only connection can use only the read tools.
 
 ## Set up a new product
-1. `manageProducts` create: name, seoName, description, price (minor units). Products are
+1. `manageProducts` create: name, seoName, description, price (minor units), stereotypeId
+   `defaultProduct`. Without a stereotype the product page gets none of the stereotype's blocks
+   (nav, footer); a product that gains variants moves to `variantProduct` by itself. Products are
    created disabled; pass `enabled: true` to publish immediately.
 2. `collections` list: find the target collection.
 3. `manageProducts` addToCollection: skuId plus the collection's seoName or ID.
@@ -25,6 +27,13 @@ Every read tool has a `manage*` twin for writes (`products` / `manageProducts`,
    Category trees below); `products` get shows its `homeCategory`.
 5. `inventory` get / `manageInventory` set: stock is held per SKU, not on the product.
 6. Content: `manageExtensionConfig` add, then update (see below).
+
+Donations: `productTypeDecorators` `["donationProduct"]`. It defaults to no shipping and
+quantityType PRICE_AS_QUANTITY (the shopper enters the amount). For a fixed-price gift (e.g. £10)
+set quantityType `FIXED`, or the storefront shows "Give any amount". A monthly gift needs both
+`subscriptionProduct` and `donationProduct`, quantityType `FIXED`, and a
+`donationFormExtension` on it for the Gift Aid tick; with `subscriptionProduct` alone it recurs
+but records no donations. Gift Aid on recurring gifts needs the Charity plan or Enterprise.
 
 ## Add content to a page, product or collection
 1. `pages` get (or `products` / `collections` get) to find the item.
@@ -48,7 +57,9 @@ A new shop starts with the platform's name, colours and a £1.00 placeholder del
 2. Brand: if `getDesignBrief` is still the defaults (indigo #4F46E5, empty voice), propose a
    palette and voice that fit the shop and save them with `manageBranding` setDesignBrief
    (only the sections you pass change; colours as hex). The storefront restyles to match, so do
-   this before building content.
+   this before building content. `manageBranding` listThemes / setTheme switches the storefront
+   theme, and setCustomCss replaces the hand-written stylesheet (use `var(--color-*)` tokens);
+   `getDesignBrief` includeCss shows the current one.
 3. Delivery: `deliveryOptions` list, then `manageDeliveryOptions` update the placeholder and
    create the rest, with real names, prices (minor units) and descriptions.
 4. Policies: a delivery and returns page (`managePages` create) stating the terms the merchant
@@ -87,6 +98,8 @@ reason to stay. After creating the catalogue and pages:
    with `manageProducts` setImages (first is the main image) and use their `url` in hero and
    jsonComponent blocks. Never use stock, placeholder or made-up image URLs. If the library is
    empty or has nothing suitable, leave images out and tell the merchant which photos are needed.
+   Photos the merchant hands you (a public https URL, or a file as base64) go into the library
+   with `manageMedia` import (title, altText); use the returned id and url.
 5. Hand over real links: every result carries `url`, the shopper-facing address. Quote those
    (collections are /collection/..., tree categories /c/..., pages /p/..., products
    /product/...); never guess. On a tree site a collection's `url` may be its category, or null
@@ -169,7 +182,9 @@ Blocks the recipes share:
 5. cta variant `band` in `bottomBanner`.
 
 ## Set up a collection page
-1. `manageCollections` create: name, seoName. Nesting under a parent is admin-UI only for now.
+1. `manageCollections` create: name, seoName, stereotypeId `defaultCollection` (it supplies the
+   nav menu and the product grid; without it the page has neither). Nesting under a parent is
+   admin-UI only for now.
 2. `manageProducts` addToCollection for each product.
 3. `manageExtensionConfig` add a hero in `bannerSection`, then content in `topBanner` (above
    the product grid) or `bottomBanner` (below it).
@@ -213,8 +228,9 @@ collection-based shop onto a tree: use the `category-trees` skill (`merchandisin
 
 ## Search
 
-Searches that find nothing, or "why doesn't X show when I search for Y": use the `search-tuning`
-skill (`synonyms` explain and gaps, `manageSynonyms`).
+Searches that find nothing, "why doesn't X show when I search for Y", or putting products in
+order for a search term: use the `search-tuning` skill (`synonyms` explain and gaps,
+`manageSynonyms`, `productRanking` / `manageProductRanking`).
 
 ## Share a "buy now" or "donate" link
 For a QR code, an email, a social post or a button on another website: a direct checkout link

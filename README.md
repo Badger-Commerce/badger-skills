@@ -28,7 +28,7 @@ npx skills add Badger-Commerce/badger-skills --skill badger-mcp -a claude-code
 | `json-components` | Build and edit freeform JSON components — full component catalog, semantic style tokens, data binding | auto |
 | `taxonomy` | Design and construct product taxonomies — common patterns for apparel, food, retail, and charity shops | auto |
 | `category-trees` | Build and run category trees (`/c/` pages) — backings, cross-cutting pages, product breadcrumbs, replaced collections, and moving a collection-based shop onto a tree | auto |
-| `search-tuning` | Diagnose search ("why doesn't X show for Y"), close zero-result gaps, manage synonyms and review AI suggestions | auto |
+| `search-tuning` | Diagnose search ("why doesn't X show for Y"), close zero-result gaps, manage synonyms and review AI suggestions, pin, boost, bury or redirect results for a search term | auto |
 
 Start with `/badger-mcp` for an overview of the platform and how the tools fit together. The other skills are triggered automatically when you're working in their domain.
 

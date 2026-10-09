@@ -24,7 +24,8 @@ breadcrumbs until the setting says MERCH_TREE, though the primary tree's /c/ pag
 address. On a site already on MERCH_TREE, the primary tree is live: build a replacement as a
 second tree, and make it primary (`updateTree` primary: true) when it's ready.
 
-Rankings and category landing pages stay with `productRanking` / `manageProductRanking`.
+Rankings and category landing pages stay with `productRanking` / `manageProductRanking` (see
+Order a category, below).
 Designing the taxonomy a tree is built from: the `taxonomy` skill.
 
 ## Read before you write
@@ -46,12 +47,14 @@ outline.
 `manageMerchandisingTrees` createNode: name, backing, parent (a path; leave it out or pass `/c`
 for the top level), and optionally seoName (made from the name), position (1 = first),
 description, metaTitle, metaDescription, hidden, excluded, collections (seoNames it replaces)
-and facets (filter ids in order, e.g. taxonomy attribute ids, `price`, `inStock`). The backing's
+and facets (filter ids in order, e.g. taxonomy attribute ids, `price`, `inStock`, `onSale`,
+`featured`, `manufacturer`, `rating`). facets only orders the filters: how one looks is
+`manageProductTaxonomy` setFilterDisplay (`taxonomy` skill). The backing's
 `type` decides what it lists:
 - `{"type": "taxonomyProjection", "taxonomyLevelId": "fixings-screws", "attributeFilters":
   [{"attributeId": "application", "values": ["Drywall"]}]}`: products assigned to that taxonomy
   level or below, optionally narrowed to attribute values (exact allowed values from
-  `taxonomies` getActive). The usual choice on a site with a taxonomy (`taxonomy` skill).
+  `taxonomies` get with the taxonomyId). The usual choice on a site with a taxonomy (`taxonomy` skill).
 - `{"type": "manualCollection", "collectionSeoName": "gifts"}`: a collection's products. The
   category replaces that collection.
 - `{"type": "manualList", "productSkuIds": ["SKU-1", "SKU-2"]}`: a fixed list in that order.
@@ -68,6 +71,21 @@ A URL name must be unique among its siblings and can't contain `/` or spaces. Th
 (category, parent and/or position) and `deleteNode` (takes its subcategories with it). Trees:
 `createTree` (name, slug, primary), `updateTree`, `deleteTree`. Listings update after a reindex
 the change queues, so give a new category a moment.
+
+## Order a category
+Rankings apply only under the default "Featured" sort, when browsing with no search term. A
+`manualList` category keeps its own order and ignores them.
+1. `productRanking` category (category: id, path or name) shows its ranking; `preview` (category,
+   `limit` default 12, max 48) shows the first products as shoppers see them, each marked
+   pinned, boosted, buried or normal.
+2. `manageProductRanking` pin (products, category, `position` 1-based, default after the existing
+   pins), boost, bury or unrank change one product at a time. setCategory (`pinned`, `boosted`,
+   `buried`, at most 100 each) replaces the whole ranking; clearCategory removes it.
+3. Brand or attribute landing pages (`/c/womens/dresses/colour/red`): `productRanking` landing
+   (category, or none for the tree default), then `manageProductRanking` setLanding
+   (`landingRules`, `[]` switches them off) or inheritLanding.
+4. What a category optimises for when ranked by what sells: `manageProductRanking` setGoal (goal
+   units, conversion, revenue or margin, with category; a blank goal inherits the shop's).
 
 ## Breadcrumbs: home and main categories
 On a tree site, a product's breadcrumb leads to its home category: the deepest visible category

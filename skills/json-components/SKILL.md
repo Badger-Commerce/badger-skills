@@ -20,9 +20,9 @@ When the brief sets `palette.gradient`, prefer `background: var(--gradient-brand
 | Action | Tool |
 |--------|------|
 | Find existing extensions on an item | `extensionConfig` (itemType, itemId) |
-| Add a new jsonComponent extension | `manageExtensionConfig` add (extensionName: "jsonComponent") |
-| Update the JSON definition | `manageExtensionConfig` update — set the `jsonComponent` property |
-| Find images for use in components | `media` list |
+| Add a new jsonComponent extension | `manageExtensionConfig` add (extensionName: "jsonComponent", pageLocation: a slot from listPageLocations; it is required) |
+| Update the JSON definition | `manageExtensionConfig` update (extensionConfigId) — set the `jsonComponent` property |
+| Find images for use in components | `media` list (`manageMedia` import adds one the merchant gives you) |
 | List available page slots | `extensions` listPageLocations (itemType, itemId) |
 
 The `jsonComponent` config property must contain a JSON document with `"version": "1.0"` and a `component` field defining the component tree (a JSON string or an object; it is validated on save, see Validation).
@@ -32,7 +32,8 @@ The `jsonComponent` config property must contain a JSON document with `"version"
 1. **Need a hero section?** → Use the `hero` extension (5 curated presets, form-based editing)
 2. **Standard pattern, no purpose-built extension?** → Use `jsonComponent` with a starter template
 3. **Truly custom layout?** → Use `jsonComponent` freeform
-4. **Long-form prose (article/blog body, policy text, anything with lists or sub-headings)?** → Use `markdownFragment`. jsonComponent `text` is a plain, escaped `<p>`: no markdown, lists, links or line breaks. Article bodies go in `markdownFragment`; jsonComponent is for the layout pieces around them (hero, feature grid, CTA band, product strip).
+4. **Appeal band, call-to-action strip, sidebar panel or stat card?** → Use `callToAction` (form-based: `variant` band/strip/panel/stat, `eyebrow`, `heading`, `text`, `value`, `primaryLabel`/`primaryUrl`, `secondaryLabel`/`secondaryUrl`). Themes such as Ridge give it their own design, which a jsonComponent band won't get.
+5. **Long-form prose (article/blog body, policy text, anything with lists or sub-headings)?** → Use `markdownFragment`. jsonComponent `text` is a plain, escaped `<p>`: no markdown, lists, links or line breaks. Article bodies go in `markdownFragment`; jsonComponent is for the layout pieces around them (hero, feature grid, CTA band, product strip).
 
 ---
 
@@ -47,9 +48,9 @@ The `jsonComponent` config property must contain a JSON document with `"version"
 | container | — | spacing, padding, background, backgroundImage, backgroundOverlay, backgroundPosition, backgroundSize, radius, shadow, maxWidth, border, animation |
 | row | stackOnMobile (bool, default true) | gap, align, justify, animation |
 | column | width [1/4, 1/3, 1/2, 2/3, 3/4, full, auto] (default auto), mobileWidth [1/2, full, auto] (default full) | gap, align, maxWidth, animation |
-| tabs | children must be `tab` | variant |
+| tabs | children should be `tab` (not validated) | variant |
 | tab | label (b), active (bool) | — |
-| accordion | allowMultiple (bool); children must be `accordionItem` | variant |
+| accordion | allowMultiple (bool); children should be `accordionItem` (not validated) | variant |
 | accordionItem | title (b), expanded (bool) | — |
 
 ### Content Components (no children)
@@ -71,7 +72,7 @@ The `jsonComponent` config property must contain a JSON document with `"version"
 | Type | Props | Style keys |
 |------|-------|-----------|
 | spacer | size [xs, sm, md, lg, xl] (default md) | — |
-| divider | thickness [thin, md, thick], lineStyle [solid, dashed, dotted] | color, spacing (no visible effect on Nova) |
+| divider | thickness [thin, md, thick], lineStyle [solid, dashed, dotted] | color, spacing (neither has a visible effect on Nova) |
 | carousel | images (array of `{src, alt, caption}`, each bindable), autoPlay (bool), interval (1000-30000ms, default 5000), showIndicators (bool), showControls (bool) | radius, shadow |
 
 ### Product Components (no children)
@@ -97,7 +98,7 @@ Aliases: `backgroundColor` = `background`, `textAlign` = `align`, `borderRadius`
 | variant (type) | heading-xl, heading-lg, heading-md, heading-sm, body-lg, body-md, body-sm, link | heading-xl = display, lg ≈ h1, md ≈ h2, sm ≈ h3; body-lg = lead |
 | variant (marketing) | display-xl, display-lg, display-md, subheadline, overline, overline-pill, link-arrow | Big fluid headlines, lead copy, small-caps kicker (pill = badge), "Read more →" link. Bootstrap: inline approximations |
 | variant (button) | button-primary, button-secondary | |
-| color | primary, secondary, muted, success, error, warning; primary-light/-dark, secondary-light/-dark, success-light/-dark, error-light/-dark, warning-light/-dark; gray-light, gray, gray-dark; white, black | |
+| color | primary, secondary (on Nova a mid grey, not the brief's secondary colour), muted, success, error, warning; primary-light/-dark, secondary-light/-dark, success-light/-dark, error-light/-dark, warning-light/-dark; gray-light, gray, gray-dark; white, black | |
 | background | surface, surface-light, surface-dark, white, transparent, secondary, muted, primary, primary-light, primary-dark, primary-subtle, success, success-light, error, error-light, warning, warning-light, gray-light, gray, gray-dark | |
 | background (dark/pattern) | dark, gradient-dark, mesh-dark, gradient, mesh, dots | Nova: themed section surfaces. Bootstrap: mesh = plain white, mesh-dark = plain dark |
 | padding | none (0), xs (4px), sm (8), md (16), lg (24), xl (32), 2xl (64), 3xl (96), section (64 / 24 sides), section-lg (96 / 24 sides) | Use section / section-lg for full-width bands |
@@ -125,7 +126,7 @@ Aliases: `backgroundColor` = `background`, `textAlign` = `align`, `borderRadius`
 
 ## Data Binding
 
-Use `{"$ref": "/context/path", "fallback": "default"}` for dynamic values. Optional `"format"`: capitalize, uppercase, lowercase, trim. Valid contexts: user, order, siteContext, item, lastOrder, data (anything else is rejected).
+Use `{"$ref": "/context/path", "fallback": "default"}` for dynamic values. Optional `"format"`: capitalize, uppercase, lowercase, trim. Valid contexts: user, order, siteContext, item, lastOrder, data (anything else is rejected). `lastOrder` passes validation but is never filled, so it always renders the fallback.
 
 ### Context Paths
 
@@ -137,7 +138,6 @@ Use `{"$ref": "/context/path", "fallback": "default"}` for dynamic values. Optio
 | /item/* (product) | /item/productName, /item/price (cents), /item/comparePrice, /item/description, /item/miniDescription, /item/manufacturer, /item/seoName, /item/images/0/url, /item/images/0/altText, /item/quantityInStock, /item/attributes/{key} |
 | /item/* (collection) | /item/name, /item/description, /item/seoName |
 | /item/* (page) | /item/name, /item/attributes/{key} |
-| /lastOrder/* | Same as /order/* but for last completed order (order confirmation pages) |
 | /data/* | /data/{sourceName}/0/productName (see Data Sources) |
 
 ---
@@ -161,7 +161,7 @@ Declare at root level alongside `"component"`:
 | Type | Params | Description |
 |------|--------|-------------|
 | trending-products | limit (int, default 8), hoursToCheck (int, default 24) | Trending products by recent views |
-| collection-products | collection (seoName, required), limit (int, default 12), offset (int, default 0), inStockOnly (bool, default false) | Products from a collection |
+| collection-products | collection (seoName, required), limit (int, default 12), offset (int, default 0; rounded down to a multiple of limit), inStockOnly (bool, default false; drops disabled products, not out-of-stock ones) | Products from a collection |
 | merchandising-node-products | nodeId OR path (canonical, e.g. "/c/womens/coats"; nodeId wins), treeId (default primary tree), limit (int, default 12), offset (int, default 0) | Products in a category-tree (merchandising) node |
 | recently-viewed | limit (int, default 10) | User's recently viewed products (requires login) |
 
@@ -189,9 +189,9 @@ For full-width background with constrained content: use `"layout": "fluid"` with
 
 ## Validation
 
-`manageExtensionConfig` rejects the save on **errors**: missing `component` or `type`; unknown component type; `children` on a leaf type or not an array; enum value outside its list (icon name, width, size, cardVariant…); wrong value type (number/boolean/string); `$ref` on a non-bindable prop, not starting with `/`, or with an unknown context; `action` without `type: "navigate"` and `href`.
+`manageExtensionConfig` rejects the save on **errors**: missing `component` or `type`; unknown component type; `children` on a leaf type or not an array; enum value outside its list (icon name, width, size, cardVariant…); wrong value type (number/boolean/string); `$ref` on a non-bindable prop, not starting with `/`, or with an unknown context; `action` without `type: "navigate"` and `href`; invalid JSON; `style` or `action` that isn't an object. Numeric ranges (columns, interval, index) aren't checked, only the type.
 
-It saves with **warnings** (and ignores the field): unknown prop, unknown node field, style key not listed for that type, unknown `format`. Token values are not checked: a misspelt token just renders nothing.
+It saves with **warnings**, which the MCP result doesn't show: unknown prop and unknown node field (both ignored), style key not listed for that type (still applied if the renderer knows the key), unknown `format`, missing `version`. Token values are not checked: a misspelt token just renders nothing.
 
 ## Rules
 
