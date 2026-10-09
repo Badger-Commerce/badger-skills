@@ -52,7 +52,10 @@ A new shop starts with the platform's name, colours and a £1.00 placeholder del
    create the rest, with real names, prices (minor units) and descriptions.
 4. Policies: a delivery and returns page (`managePages` create) stating the terms the merchant
    gave you, linked from the navigation.
-5. Say what you invented. If the merchant didn't give you a founder's name, a start date or a
+5. Legal lines and wording: `manageSiteText` set overrides the platform's text for a key, e.g.
+   `footer.disclaimer` (charity and company numbers, registered office) and `footer.footerText`
+   (which otherwise credits the platform). `siteText` get shows a key's default first.
+6. Say what you invented. If the merchant didn't give you a founder's name, a start date or a
    returns window, don't present a guess as fact: flag it in your summary.
 
 ## Make the shop ready for visitors
@@ -113,10 +116,23 @@ collection-based shop onto a tree: use the `category-trees` skill (`merchandisin
 `manageMerchandisingTrees`).
 
 ## Structured product data
-1. `taxonomies` getActive. If there is none, design one with the `taxonomy` skill and create it
-   in the admin UI (MCP can't create taxonomies yet).
-2. `manageProductTaxonomy` assign each product to a level, then updateAttributes.
-3. `productTaxonomy` (skuId) to find missing mandatory attributes.
+1. `taxonomies` getActive (or list: `active` marks the one in use). If there is none, design one
+   with the `taxonomy` skill: levels, attributes, types and allowed values.
+2. Build it: `manageTaxonomies` create (name, description) gives the taxonomyId. Then addLevel
+   for each level (parentLevelId for a sub-level, left out for a top-level one) and addAttribute
+   for each attribute (levelId, `attribute` {name, type, mandatory, allowedValues, ...}). Put
+   shared attributes on the parent level. Results carry the new levelId and attributeId;
+   `taxonomies` get shows the whole tree.
+3. `manageTaxonomies` setActive. The first activation changes no product. Switching from another
+   active taxonomy clears every product's level and attributes: `dryRun: true` first, tell the
+   user how many products it clears, and only then repeat with `confirm: true` (needs mcp:admin).
+4. `manageProductTaxonomy` assign each product to a level, then updateAttributes.
+5. `productTaxonomy` (skuId) to find missing mandatory attributes.
+6. Later edits (updateLevel, moveLevel, removeLevel, updateAttribute, removeAttribute): on the
+   active taxonomy, run the edit with `dryRun: true` first. Its `impact` lists products that
+   would lose a level, an attribute or a value (or hold a value of the old type). If it isn't
+   empty, tell the user and repeat with `confirm: true` only once they agree. Adding values,
+   levels and attributes is always safe.
 
 ## Search
 
