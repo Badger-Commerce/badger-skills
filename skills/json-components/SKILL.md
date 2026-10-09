@@ -80,8 +80,10 @@ The `jsonComponent` config property must contain a JSON document with `"version"
 | Type | Props | Style keys |
 |------|-------|-----------|
 | productGrid | dataSource, columns (2-6, default 4), mobileColumns (1-3, default 2), showPrice, showDescription, cardVariant [standard, compact, featured] | gap, padding, background, radius |
-| productCarousel | dataSource, autoScroll (bool), scrollInterval (1000-30000ms), showPrice, cardVariant | gap, padding, background, radius |
+| productCarousel | dataSource, autoScroll (bool), scrollInterval (1000-30000ms), showPrice, cardVariant, bleed [none, end, both] (default none) | gap, padding, background, radius |
 | productCard | dataSource, index (0-100), showImage, showPrice, showDescription, variant [standard, compact, featured] | padding, background, radius, shadow |
+
+**Full-bleed carousel.** A productCarousel normally stops at the page's content column. `"bleed": "both"` runs the strip to both edges of the window: at rest the first card still lines up with the heading above, and scrolling runs edge to edge. `"end"` breaks out on the trailing side only. Use it on a home-page product strip in place of custom CSS such as `margin-right: calc(50% - 50vw)`. It is **ignored inside a row or column** (a half-width column must not break out), so put the carousel at the top level or in a plain container, and don't use it in a sidebar slot. With bleed on, the strip's horizontal padding comes from the bleed and overrides the `padding` style token on that axis.
 
 ---
 
