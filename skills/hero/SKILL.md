@@ -61,13 +61,44 @@ The `heroConfig` property stores a JSON string (send a string or an object). Unl
 |----------|------|---------|-------------|
 | `preset` | string | All | One of: `centered`, `split-image`, `video-bg`, `gradient`, `minimal` |
 | `backgroundImage` | string | centered, gradient | Background image URL, used verbatim (see Images). Without one, both fall back to a darkened brand gradient |
+| `backgroundImages` | array | centered, gradient | A slideshow behind the copy: `[{"url", "caption", "alt"}, ...]`. Two or more cross-fade; a single one is used as `backgroundImage` when that is empty (see Background Slideshow) |
+| `slideInterval` | number | centered, gradient | Milliseconds each photo shows: default `6000`, clamped to 3000–20000 |
+| `slideControls` | string | centered, gradient | `"both"` (default: caption with "2 of 5", arrows and dots), `"dots"`, `"arrows"` or `"none"`. The pause button is always there |
 | `backgroundOverlay` | string | centered, video-bg | `"dark"` (default), `"medium"` or `"light"`: a darkening gradient, strongest for dark. Any other value draws no overlay |
 | `videoUrl` | string | video-bg | URL to MP4 video file |
 | `backgroundEffect` | string | gradient, minimal, split-image | Animated canvas behind the copy: `"none"` (default), `"constellation"`, `"flowField"`, `"gridGlow"`. Ignored on other presets |
 | `backgroundEffectIntensity` | string | as above | `"subtle"` (default) or `"normal"` |
-| `height` | string | All | `"tall"` (default, about 70vh: a landing hero) or `"compact"` (as tall as its copy). Use `compact` for every hero except the home page's |
+| `height` | string | All | `"tall"` (default, about 70vh: a landing hero), `"compact"` (as tall as its copy) or `"screen"` (the rest of the window under the nav: a photo-led home page). Use `compact` for every hero except the home page's |
 | `contentAlign` | string | gradient, split-image | `"edge"` (default: the copy starts a fixed inset from the window edge) or `"container"` (the copy lines up with the page's content column, under the logo). Wide screens (1024px+) only; the centred presets ignore it |
 | `slots` | object | All | Map of slot name → JSON component definition |
+
+## Background Slideshow
+
+For a photo-led home page, give a `centered` or `gradient` hero two or more `backgroundImages`: the photos cross-fade while the title, text and buttons stay put. Pair it with `"height": "screen"`.
+
+- `url` follows the same rules as `backgroundImage` (see Images). An address that isn't a path on the shop or an `http(s)`/protocol-relative URL is dropped.
+- `caption` is a short label shown beside the controls (e.g. "Night exercise"); `alt` describes the photo for screen readers. Write both from what the merchant tells you about each photo.
+- The other presets ignore the photos, which stay in the config if you switch between `centered` and `gradient`.
+- It pauses on hover, focus and a hidden tab, gives reduced-motion visitors no autoplay, and shows the first photo without JavaScript.
+
+When each slide needs its own text or link, use the Static Carousel (`staticCarouselExtension`) instead: the hero slideshow is one message over changing photos.
+
+```json
+{
+  "preset": "centered",
+  "height": "screen",
+  "backgroundOverlay": "dark",
+  "backgroundImages": [
+    {"url": "//images.bdgr.co.uk/acme/media/hill.jpg", "caption": "On the hill", "alt": "Team members carrying a stretcher across moorland"},
+    {"url": "//images.bdgr.co.uk/acme/media/night.jpg", "caption": "Night exercise", "alt": "Head torches lighting a rocky path at night"}
+  ],
+  "slideInterval": 6000,
+  "slideControls": "both",
+  "slots": {
+    "title": {"type": "heading", "props": {"text": "Out in all weathers", "level": 1, "style": {"variant": "heading-xl", "color": "white"}}}
+  }
+}
+```
 
 ## Animated Background Effects
 
