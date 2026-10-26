@@ -1,6 +1,6 @@
 ---
 name: badger-mcp
-description: Workflows for running a Badger Commerce shop through its MCP tools — setting up products, collections, category trees, pages and extensions, variants, taxonomy, and reviewing performance
+description: Workflows for running a Badger Commerce shop through its MCP tools — setting up products, collections, category trees, pages and extensions, variants, taxonomy, email campaigns and customer messaging, and reviewing performance
 user-invocable: true
 allowed-tools: Read, Grep, Glob
 ---
@@ -317,3 +317,157 @@ and on checkout they can still change the amount (donations) or quantity, and ad
    receive (restocks unless `restock: false`). Then `manageReturns` refund with `dryRun: true`,
    confirm the amount with the user, and refund with an `idempotencyKey`. Or reject with a reason
    the customer will see.
+
+## Customer messaging and email campaigns
+> Added with badger-commerce MR !550. Until that is released, a shop's MCP server won't have the
+> `campaigns`, `manageCampaigns`, `contacts`, `contactRequests` or `legalDocuments` tools.
+
+Shoppers' consent is recorded per contact and per mailing list; campaigns go only to the people who
+agreed. The consent rules are the platform's, not yours to bend, so these workflows are about
+using them well.
+
+### Send an email campaign
+A campaign is written once, in the shop's default language, and goes to one mailing list. Work
+through it in order and stop whenever a step fails.
+1. `campaigns topics`: the shop's mailing lists with key, name and confirmed subscribers. Pick the
+   list with the owner (`general` is the built-in "News and offers"). A list with no confirmed
+   subscribers can't be sent to. Archived lists are flagged.
+2. Sending domain: `campaigns sendingDomain`. Campaigns go out from the shop's own domain, never a
+   shared Badger one, and can't be scheduled until it is verified. `{configured: false}` means none
+   yet. If it isn't verified, say so and don't carry on to scheduling:
+   - none, or DNS records failing: the shop owner must publish the DNS records it lists at their DNS
+     provider (where they bought the domain). Suggest a subdomain such as `news.theirshop.co.uk`,
+     so marketing mail builds its own reputation and can't affect order emails. `manageCampaigns`
+     `setSendingDomain` (`domainName`) adds it and returns the records; `checkSendingDomain` asks
+     again once they're published. Both, and `removeSendingDomain`, need mcp:admin. DNS can take a
+     few minutes to a day, so hand the records over and come back later.
+   - company details missing: the owner fills in **Legal entity name** and **Registered address**
+     in Settings; the email provider won't approve a sender without them, and the footer needs the
+     address.
+   - under review, not approved, suspended: wait, or tell the owner to contact support. A suspended
+     domain pauses any campaign that was sending.
+   Test sends work before the domain is verified, so you can build and test in the meantime.
+3. `getDesignBrief` for the voice, `media list` for real photos (never made-up URLs).
+   `manageCampaigns` create (name, subject, `topic` = the list key, `preheader`, `blocks`). `blocks`
+   is the whole body (up to 40), each `{type, params}`:
+   - `HEADING`: `text` (up to 200), `level` 1 or 2;
+   - `TEXT`: `markdown` (up to 10,000; links `https://`, `http://` or `mailto:`; raw HTML is shown as
+     text);
+   - `IMAGE`: `mediaId` from the media library, `alt`, optional `linkUrl`;
+   - `BUTTON`: `label` (up to 60) and `url`;
+   - `PRODUCT_GRID`: `collectionSeoName`, `limit` 2 to 12 (default 6), `columns` 2 or 3 (default 3),
+     `showPrices` (default true). The products are chosen when sending starts, in the collection's
+     order, and anything disabled or unbuyable is left out;
+   - `DIVIDER`: no params.
+   Links are `https://` addresses or paths on the shop (`/sale`). `{{first_name}}` or
+   `{{first_name|friend}}` greets by name in the subject, a heading or text; nothing else merges.
+   The footer (unsubscribe, list name, business address) is added by the platform and can't be
+   edited. Write one campaign per language, each to its own list.
+4. `manageCampaigns` update to change it: pass the `version` you last read (`campaigns get`), and
+   only the fields you give change (`blocks` replaces all of them). A stale version is refused:
+   read again and retry. Only a draft can be edited; `duplicate` makes a draft copy of anything else.
+5. `campaigns preview`: the text version for a sample recipient, plus `problems`, which lists
+   everything stopping it being scheduled (missing subject or content, an image or collection that
+   no longer exists, an empty product grid, no verified domain, no business address, nobody to send
+   to, or an email over 100 KB). Fix these before going on.
+6. `manageCampaigns` testSend with `addresses`: the owner's own addresses, at most 5 (20 test sends
+   an hour for the shop). It goes through the normal order-email sender, marked "[Test]" with
+   today's products. Never put a customer's address here. It returns `sent` and `refused` counts;
+   an address on the do-not-email list is refused. Ask the owner to check the inbox and approve.
+7. `campaigns audience` (`topic`): how many people the list reaches now. Tell the owner that
+   number in plain words ("this will go to about 1,240 people on News and offers") and get their
+   explicit yes to it and to the send time.
+8. `manageCampaigns` schedule with `confirmAudience` equal to the number from step 7. It is refused
+   if it is missing or the list has changed since: the refusal gives the new number and schedules
+   nothing, so tell the owner the new figure and ask again. `sendAt` is the shop's local time
+   (`2026-11-03T09:00`, in the shop's time zone) or an ISO time with an offset, up to 90 days ahead.
+   **Leaving `sendAt` out sends now**, so only do that when the owner asked for it.
+   Until it starts sending, `unschedule` returns it to a draft and `cancel` stops it.
+9. Watch it: `campaigns get` for status, `campaigns stats` for the counts and rates. Delivery,
+   bounce and complaint numbers keep arriving for hours after the status says SENT. A shop sends at
+   most 5,000 emails an hour, so a big list takes several hours. `pause`, `resume` and `cancel`
+   work while it sends; `cancel` is final and emails already sent can't be recalled. Read the
+   numbers like this: skipped is people who no longer qualified (unsubscribed, unconfirmed,
+   erased); suppressed is addresses on the do-not-email list; bounced and complained addresses come
+   off future campaigns by themselves. A complaint rate that is more than a trickle, or many
+   bounces, means the list needs attention: say so rather than reassure.
+
+### When a campaign has paused
+`opsInbox` has a `campaigns` line counting campaigns the system paused and a sending domain that
+needs action; its `next` is `campaigns list status PAUSED`. A campaign the system paused has a
+`statusReason` (a person pausing one leaves none), and it is usually one of these problems:
+- the sending domain stopped being verified (DNS records changed or removed): `campaigns
+  sendingDomain` shows which record fails; the owner fixes it at their DNS provider, then
+  `checkSendingDomain` (mcp:admin), then `resume`;
+- the email provider refused the account's details three times in a row, or kept failing for an
+  hour, or a batch stopped moving: tell the owner to check the shop's Mailtrap settings (Settings,
+  Email campaigns) or contact support. Nothing is lost, and `resume` sends what hadn't gone;
+- the domain is suspended or not approved: contact support.
+Don't `resume` repeatedly without the cause changing, and don't `cancel` unless the owner wants it
+stopped for good. The error text is in `statusReason`: quote it to the owner.
+
+### Customer questions: is this person subscribed, did they get it
+`contacts` and `contactRequests` hold names, email addresses, consent history and message text, so
+they need mcp:write even though they only read. Don't paste those details anywhere they aren't
+needed, and don't repeat addresses back more than the question requires.
+1. `contacts search`: `query` is the start of an email address or part of a name (an address
+   searches from its start). Narrow with `status` (subscribed, pending, unsubscribed) on a list
+   (`topic`, default `general`). `contacts summary` counts subscribers, pending and unsubscribed
+   per list.
+2. `contacts get` (`contactId`): the addresses and whether each works, where they stand on each
+   list now (`consent`), and the last 50 decisions in `history`, with date, source and method
+   (ticked box, confirmation link, one-click unsubscribe, staff). Use it to answer "why didn't they
+   get the email":
+   - pending: they signed up but haven't clicked the confirmation link, so campaigns skip them;
+   - unsubscribed: they did it themselves (or staff did, the history says which);
+   - the address shows a warning: it bounced or they reported spam, so it is on the do-not-email
+     list, and nothing but their own confirmation click undoes that;
+   - erased: the contact is gone;
+   - not on that list at all, or subscribed to a different list;
+   - subscribed but the campaign still skipped them: with "Confirm newsletter sign-ups by email"
+     on, an address must also have been proven theirs, so check `verified` on the address.
+   No match at all: they never gave an email address, or it was entered differently.
+3. The contact-us inbox: `contactRequests list` (status NEW by default, or IN_PROGRESS, CLOSED,
+   SPAM or `all`; `query` over name, email and subject), then `contactRequests get` for the whole
+   message, its order and the replies sent so far. Check `notificationFailed` and any replies. `opsInbox`
+   counts new requests and the age of the oldest.
+4. **You can't act on any of it over MCP.** There is no way to subscribe or unsubscribe someone,
+   erase a contact, reply to a message or change a request's status, and the do-not-email list isn't
+   exposed. Say what to do instead: the owner (an admin) uses Customers, Contacts (unsubscribe, erase),
+   Customers, Contact requests (reply, close), Customers, Do-not-email list, or an integration over the
+   REST API. Staff can only ever unsubscribe people: someone is subscribed only when they agree
+   themselves. If a customer asks you to sign them up, the answer is the sign-up form, the tick box at
+   checkout or their account's Preferences tab.
+
+### Check the terms and privacy notice
+Terms of sale and the privacy notice are ordinary pages, and the platform stores each text a customer
+was shown under a version label. If the page is edited without a new label, two different texts share
+one name, which makes the record of what someone agreed to less useful.
+1. `legalDocuments current` (optionally `kind` `TERMS_OF_SALE` or `PRIVACY_NOTICE`): the page, label
+   and link in use, and `drift`: `NOT_CONFIGURED` (no page set, so nothing is shown or recorded),
+   `PAGE_MISSING`, `UNREADABLE`, `EDITED_UNDER_SAME_LABEL` (the words changed, the label didn't) and
+   `LABEL_SHARED` (several texts carry the label).
+2. For `EDITED_UNDER_SAME_LABEL` or `LABEL_SHARED`, advise the owner to bump the version label
+   (Settings, Store, Terms of sale and privacy notice) whenever they change the page's wording. You
+   can't change the label or the page settings from MCP.
+3. `legalDocuments snapshots` (`kind`) lists the stored texts newest first with when each was first
+   shown, its hash and how many acceptances carry it; `legalDocuments get` (`snapshotId`) shows one
+   text word for word if it is short. A text is stored the first time a customer is shown it, so a
+   freshly edited page reads as not stored yet until someone sees it. Looking never creates a record.
+
+### Guardrails for messaging
+- **Never schedule without the owner's explicit go-ahead on the audience number** (and the send time).
+  The owner saying "send the newsletter" is not that: read `campaigns audience`, tell them the
+  figure, and wait for yes. `confirmAudience` is a check against a mistake, not a substitute for the
+  owner's approval. Don't pass a number you were given earlier without re-reading it.
+- Test sends go to the owner's own addresses only, never a customer's. A campaign can't be sent to
+  an address you supply, and you shouldn't look for a way around that.
+- **Consent rules hold.** Only confirmed subscribers of the campaign's list get it. Someone who
+  unsubscribed, complained or bounced stays off until they confirm again from their own inbox: don't
+  suggest re-adding them, importing them, or ticking a box on their behalf, none of which works.
+  Don't promise a customer that a staff action will re-subscribe them.
+- **No shared sending domain.** Campaigns always send from the shop's own verified domain. If there
+  isn't one, the answer is DNS records for the owner to publish, not a workaround. Badger's own
+  domains can't be used, and a domain belongs to one shop.
+- Don't use campaigns for order or account email: those are `manageOrderEmails` and the transactional
+  emails. A campaign is for news and offers the person asked for.

@@ -22,7 +22,7 @@ npx skills add Badger-Commerce/badger-skills --skill badger-mcp -a claude-code
 
 | Skill | Description | Invocable |
 |-------|-------------|-----------|
-| `badger-mcp` | Domain model guide, tool map, and common workflows for all Badger Commerce MCP tools | `/badger-mcp` |
+| `badger-mcp` | Domain model guide, tool map, and common workflows for all Badger Commerce MCP tools, including email campaigns and customer messaging | `/badger-mcp` |
 | `animation-scene` | Build GSAP-powered animation scenes — SaaS-style reveals, mock-browser demos, scroll-scrub effects, composed from a JSON spec with server-resolved bindings | auto |
 | `hero` | Add and configure Hero section extensions with 5 preset layouts | auto |
 | `json-components` | Build and edit freeform JSON components — full component catalog, semantic style tokens, data binding | auto |
