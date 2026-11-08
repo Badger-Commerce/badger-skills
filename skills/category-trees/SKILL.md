@@ -120,7 +120,8 @@ A collection is replaced by the first visible category that lists it in its repl
 
 Links written into content (hero buttons, jsonComponent `href`, markdown) aren't rewritten. A
 link to a replaced collection still works through the redirect, but one to a hidden collection
-is a 404. On a tree site, link to the category's /c/ `url`.
+is a 404. On a tree site, link to the category's /c/ `url`; in markdown, `[text](category:/c/path)`
+(a product is `[](product:SKU)`, which follows the product wherever it lives).
 
 ## Move a collection-based shop onto a tree
 Build and check while the site is still on COLLECTIONS. Switch last. Switching back is one

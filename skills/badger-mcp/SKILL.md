@@ -143,7 +143,8 @@ reason to stay. After creating the catalogue and pages:
    with `manageMedia` import (title, altText); use the returned id and url.
 5. Hand over real links: every result carries `url`, the shopper-facing address. Quote those
    (collections are /collection/..., tree categories /c/..., pages /p/..., products
-   /product/...); never guess. On a tree site a collection's `url` may be its category, or null
+   /product/...); never guess. Inside a markdownFragment, refer to products as
+   `[](product:SKU)` and `{price:SKU}` instead (see **prose** below). On a tree site a collection's `url` may be its category, or null
    when it has no page.
 
 ## Blogs and blog posts
@@ -187,7 +188,14 @@ hundred words in all.
 
 Blocks the recipes share:
 - **prose**: `markdownFragment` with `html` (the markdown), `cssStyle: "blog"`, `staticMode: true`.
-  Long-form text only, one block for a run of prose, no raw HTML.
+  Long-form text only, one block for a run of prose, no raw HTML. Mention products by reference,
+  never by typed name, price or `/product/` link, so the text follows the catalogue:
+  `[](product:SKU)` is the product's current name linked to its page (`[your words](product:SKU)`
+  keeps your words), `{price:SKU}` its current price ("£65.00", "from £45.00", "£55.00, was
+  £69.00"), `{name:SKU}` its name; pages are `[text](collection:seoName)`,
+  `[text](category:/c/path)` and `[text](page:seoName)`. The SKU is the product's (or a variant's)
+  `skuId` from `products`. A product the shopper can't see keeps the words without the link and
+  shows no price, so check each SKU exists before you write it.
 - **quote / images / facts**: `jsonComponent` with `"layout": "contained"` (`json-components`
   skill). Quote: a `blockquote` (quote, author, role). Images: one `image`; 2-3 as a `row` of
   `column`s with an `image` each; 4+ as a `carousel`; alt text from the media. Facts: a `row` of
