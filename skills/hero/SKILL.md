@@ -63,26 +63,80 @@ The `heroConfig` property stores a JSON string (send a string or an object). Unl
 | `backgroundImage` | string | centered, gradient | Background image URL, used verbatim (see Images). Without one, both fall back to a darkened brand gradient |
 | `backgroundOverlay` | string | centered, video-bg | `"dark"` (default), `"medium"` or `"light"`: a darkening gradient, strongest for dark. Any other value draws no overlay |
 | `videoUrl` | string | video-bg | URL to MP4 video file |
-| `backgroundEffect` | string | gradient, minimal, split-image | Animated canvas behind the copy: `"none"` (default), `"constellation"`, `"flowField"`, `"gridGlow"`. Ignored on other presets |
-| `backgroundEffectIntensity` | string | as above | `"subtle"` (default) or `"normal"` |
+| `backgroundEffect` | string | gradient, minimal, split-image | Animated canvas behind the copy: `"none"` (default), `"constellation"`, `"flowField"`, `"terrain"`, `"globe"`, `"aurora"`, `"gridGlow"`. Ignored on other presets |
+| `backgroundEffectIntensity` | string | as above | The level: `"subtle"`, `"normal"`, `"present"` (default), `"bold"` or `"showpiece"` |
+| `backgroundEffectTuning` | object | as above | Optional overrides of single settings of the level (see Animated Background Effects) |
+| `globe` | object | as above, with `backgroundEffect` `"globe"` | `{"home": {"lat", "lon"}, "destinations": [{"lat", "lon"}, ...]}`: where the shipping arcs start and end |
+| `entrance` | string | All | How the copy arrives on load: `"auto"` (default), `"none"`, `"fadeUp"`, `"rise"`, `"blur"`, `"wipe"`, `"settle"`, `"words"` (see Entrance) |
+| `entranceTuning` | object | All | Optional `travel`, `duration`, `stagger` overrides of the entrance's timing |
 | `height` | string | All | `"tall"` (default, about 70vh: a landing hero) or `"compact"` (as tall as its copy). Use `compact` for every hero except the home page's |
 | `contentAlign` | string | gradient, split-image | `"edge"` (default: the copy starts a fixed inset from the window edge) or `"container"` (the copy lines up with the page's content column, under the logo). Wide screens (1024px+) only; the centred presets ignore it |
 | `slots` | object | All | Map of slot name → JSON component definition |
 
 ## Animated Background Effects
 
-`backgroundEffect` adds a Stripe/Accenture-style ambient canvas behind the hero copy. It takes its colours from the Design Brief tokens (`--color-primary`, `--color-secondary`, `--color-accent`, `--color-on-dark-accent`), so don't pass colours. It draws a still frame for reduced-motion visitors, pauses offscreen, and fades out behind the text.
+`backgroundEffect` adds a Stripe/Accenture-style ambient canvas behind the hero copy. It takes its colours from the Design Brief tokens (`--color-primary`, `--color-secondary`, `--color-accent`, `--color-on-dark-accent`), so don't pass colours. It draws a still frame for reduced-motion visitors, pauses offscreen, and is masked behind the text so the copy stays legible.
 
-| Effect | Look | Good for |
+| Effect | Look and pointer response | Good for |
 |--------|------|----------|
-| `constellation` | Drifting points joined by faint lines, nudged by the pointer | Consultancy, tech, "network" brands |
-| `flowField` | Soft particle trails following a noise field | Creative, organic, calm brands |
-| `gridGlow` | Perspective dot grid with a slow travelling glow | Product, data, infrastructure brands |
+| `terrain` | A wireframe landscape rolling towards the viewer; the ground rises into a hill under the pointer and a click sends a ripple across it | Statement home pages: outdoor, travel, adventure, tech |
+| `globe` | A dotted globe with shipping arcs from the shop to where it ships; visitors drag to spin it | Shops that ship widely or internationally (set `globe`) |
+| `constellation` | Drifting points joined by lines; the pointer scatters them | Consultancy, tech, "network" brands |
+| `flowField` | Particle trails following a noise field; they swirl round the pointer | Creative, organic, calm brands |
+| `aurora` | Large soft fields of brand colour drifting slowly; they lean towards the pointer | Calm or premium brands, and behind longer copy |
+| `gridGlow` | Perspective dot grid with a travelling glow that slides sideways to the pointer | The plainest; prefer `terrain` |
 
-Use it on at most one hero per page, usually the home page's, and pair it with `gradient` for a dark, premium look. Leave `backgroundEffectIntensity` at `subtle` unless the brief asks for bold visual flair.
+Use it on at most one hero per page, usually the home page's, and pair it with `gradient` for a dark, premium look. A spinning globe on its own is a common sight on software sites; only use `globe` when the arcs say something true about the shop (it ships beyond its own town).
+
+**Level.** `backgroundEffectIntensity` sets every setting at once. `present` (the default) is clearly visible without competing with the copy. Use `bold` or `showpiece` for a short headline with room around it; behind a long subtitle keep `present` or lower. `subtle` and `normal` are the quieter original levels, for a brief that asks for restraint.
+
+**Tuning.** Set the level first, then override only what it doesn't give you in `backgroundEffectTuning`. Every key is optional and clamped to its range; a key left out follows the level.
+
+| Key | Range | Effect |
+|-----|-------|--------|
+| `strength` | 0.2–4 | How visible the marks are (opacity multiple) |
+| `speed` | 0.25–4 | How fast it moves |
+| `density` | 0.4–2.5 | How many points, trails or grid lines (and globe dots) |
+| `size` | 0.5–3.5 | Dot size and line weight; the globe's size |
+| `pointer` | 0–4 | How strongly it reacts to the pointer; `0` ignores it |
+| `behindCopy` | 0–1 | How much shows behind the text; lower it for long copy |
+| `linkDistance` | 0.5–2.2 | `constellation` only: how far apart points are still joined |
+| `trail` | 0.3–4 | `flowField` only: how long the trails linger |
+| `relief` | 0–3 | `terrain` only: how tall the hills are |
+
+**Globe arcs.** `globe.home` is where the shop is; each `destinations` entry is a place it ships to (up to 24, as decimal degrees). With a home and no destinations, arcs go to major cities worldwide; with no home, the globe spins without arcs. Locations carry no coordinates, so look the shop's town up yourself.
 
 ```json
-{"preset": "gradient", "backgroundEffect": "constellation", "slots": {...}}
+{"preset": "gradient", "backgroundEffect": "terrain", "backgroundEffectIntensity": "bold",
+ "backgroundEffectTuning": {"relief": 1.6}, "slots": {...}}
+```
+
+```json
+{"preset": "gradient", "backgroundEffect": "globe",
+ "globe": {"home": {"lat": 53.38, "lon": -1.47},
+           "destinations": [{"lat": 51.51, "lon": -0.13}, {"lat": 48.86, "lon": 2.35}, {"lat": 40.71, "lon": -74.01}]},
+ "slots": {...}}
+```
+
+## Entrance
+
+`entrance` animates the copy in when the page loads, on every preset: the eyebrow, title, text, buttons and stats arrive one after another. Reduced-motion visitors see the copy at once.
+
+| Value | Look |
+|-------|------|
+| `auto` (default) | `fadeUp` on `centered`, none on the other presets |
+| `none` | No entrance |
+| `fadeUp` | A short fade up (24px) |
+| `rise` | A longer rise with a soft landing; a good default for a home page |
+| `blur` | Each line sharpens into place |
+| `wipe` | Each line is revealed from below |
+| `settle` | Each line scales down slightly into place |
+| `words` | The title arrives word by word; best with a short title |
+
+`entranceTuning` overrides the style's timing: `travel` 0–140 (pixels each line moves), `duration` 0.2–2.5 (seconds per line), `stagger` 0–0.5 (seconds between lines). Pair a strong effect with a calm entrance (`rise`, `fadeUp`) rather than two loud ones.
+
+```json
+{"preset": "minimal", "entrance": "words", "entranceTuning": {"stagger": 0.22}, "slots": {...}}
 ```
 
 ## Slot Component Types
