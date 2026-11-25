@@ -7,7 +7,7 @@ allowed-tools: Read, Grep, Glob
 
 # JSON Component Builder
 
-You are building JSON component definitions for Badger Commerce's `jsonComponent` extension. This skill contains all the reference material you need — **do not call `extensions` getSchema or getPromptSection** for the jsonComponent extension.
+You are building JSON component definitions for Badger Commerce's `jsonComponent` extension. This skill contains all the reference material you need — **do not call `extensions` getSchema or getReference** for the jsonComponent extension.
 
 ## Stay on-brand: load the design brief first
 
